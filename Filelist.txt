@@ -1,0 +1,11 @@
+./Wrapper_tb.v
+./Wrapper.v
+./RAM.v
+./processor.v
+./Provided Behavioral Components/alu.v
+./Provided Behavioral Components/multdiv.v
+./Provided Behavioral Components/multiplier.v
+./Provided Behavioral Components/divider.v
+./Provided Behavioral Components/dffe_ref.v
+./Provided Behavioral Components/regfile.v
+./ROM.v
