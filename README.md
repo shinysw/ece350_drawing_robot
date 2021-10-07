@@ -1,4 +1,4 @@
-# Processor Checkpoint for ECE 350
+# Processor
 ## NAME (NETID)
 
 ## Description of Design
