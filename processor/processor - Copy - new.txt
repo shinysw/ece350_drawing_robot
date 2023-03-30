@@ -1,0 +1,316 @@
+/**
+* READ THIS DESCRIPTION!
+*
+* This is your processor module that will contain the bulk of your code submission. You are to implement
+* a 5-stage pipelined processor in this module, accounting for hazards and implementing bypasses as
+* necessary.
+*
+* Ultimately, your processor will be tested by a master skeleton, so the
+* testbench can see which controls signal you active when. Therefore, there needs to be a way to
+* "inject" imem, dmem, and regfile interfaces from some external controller module. The skeleton
+* file, Wrapper.v, acts as a small wrapper around your processor for this purpose. Refer to Wrapper.v
+* for more details.
+*
+* As a result, this module will NOT contain the RegFile nor the memory modules. Study the inputs
+* very carefully - the RegFile-related I/Os are merely signals to be sent to the RegFile instantiated
+* in your Wrapper module. This is the same for your memory elements.
+*
+*
+*/
+module processor(
+// Control signals
+clock, // I: The master clock
+reset, // I: A reset signal
+
+// Imem
+address_imem, // O: The address of the data to get from imem
+q_imem, // I: The data from imem
+
+// Dmem
+address_dmem, // O: The address of the data to get or put from/to dmem
+data, // O: The data to write to dmem
+wren, // O: Write enable for dmem
+q_dmem, // I: The data from dmem
+
+// Regfile
+ctrl_writeEnable, // O: Write enable for RegFile
+ctrl_writeReg, // O: Register to write to in RegFile
+ctrl_readRegA, // O: Register to read from port A of RegFile
+ctrl_readRegB, // O: Register to read from port B of RegFile
+data_writeReg, // O: Data to write to for RegFile
+data_readRegA, // I: Data from port A of RegFile
+data_readRegB // I: Data from port B of RegFile
+
+);
+
+// Control signals
+input clock, reset;
+
+// Imem
+output [31:0] address_imem;
+input [31:0] q_imem;
+
+// Dmem
+output [31:0] address_dmem, data;
+output wren;
+input [31:0] q_dmem;
+
+// Regfile
+output ctrl_writeEnable;
+output [4:0] ctrl_writeReg, ctrl_readRegA, ctrl_readRegB;
+output [31:0] data_writeReg;
+input [31:0] data_readRegA, data_readRegB;
+
+//Latches reset signal
+// wire r, s, q, q_not;
+// nor nor_0(q, r, q_not);
+// nor nor_1(q_not, q, s);
+
+// assign r = reset;
+// assign s = clock;
+
+/*****************************Fetch*****************************/
+wire [31:0] address_imem_new, address_imem_curr, address_imem_add;
+//assign address_imem = address_imem_new;
+//assign address_imem = q_not ? 32'b0 : address_imem_new;
+//register address_reg(clock, 1'b1, reset, address_imem, address_imem_curr);
+
+//assign ctrl_writeEnable = 1'b1;
+wire placeholder, pc_neq, pc_lt;
+
+wire pc_src;
+//assign address_imem = pc_src ? exe_pc_out :  address_imem_new;
+
+wire is_branch;
+assign pc_src = (exe_opcode == 5'b00010 & alu_notEqual) || (exe_opcode == 5'b00110 & alu_lessThan);
+
+
+cla_32_bit program_counter(address_imem, 32'b1, 1'b0, address_imem_add, placeholder, pc_neq, pc_lt);
+
+assign address_imem_new = pc_src ? exe_pc_out : address_imem_add;
+
+falling_register reg_pc(clock, 1'b1, reset, address_imem_new, address_imem);
+
+
+wire [31:0] reg_f_d_out, reg_d_x_out, reg_x_m_out, reg_m_w_out;
+falling_register reg_f_d(clock, 1'b1, reset, q_imem, reg_f_d_out);
+
+wire [31:0] fet_pc_out;
+falling_register fet_pc(clock, 1'b1, reset, address_imem_add, fet_pc_out);
+
+
+/*****************************Decode*****************************/
+falling_register reg_d_x(clock, 1'b1, reset, reg_f_d_out, reg_d_x_out);
+
+
+wire [4:0] dec_opcode;
+assign dec_opcode = reg_f_d_out[31:27];
+
+wire [4:0] dec_rd = reg_f_d_out[26:22];
+wire [4:0] dec_rs = reg_f_d_out[21:17];
+wire [4:0] dec_rt = reg_f_d_out[16:12];
+
+
+assign ctrl_readRegA = (dec_opcode == 5'b00010) || (dec_opcode == 5'b00110) ? dec_rd : dec_rs; 
+
+// //$rs
+// assign ctrl_readRegA = reg_f_d_out[21:17];
+
+//$rt or $rd if sw
+//assign ctrl_readRegB = reg_f_d_out[16:12];
+assign ctrl_readRegB = (dec_opcode == 5'b00111) ? dec_rd : 5'bz;
+//branches
+assign ctrl_readRegB = (dec_opcode == 5'b00010) || (dec_opcode == 5'b00110) ? dec_rs : dec_rt;
+
+
+//Addi sign extension
+wire [31:0] add_i_imm;
+//q_imem[16:0];
+wire [15:0] add_i_sign;
+//assign wren = 1'b0;
+
+//Sign extension for negative addi
+assign add_i_sign = reg_f_d_out[16] ? 16'b1111111111111111 : 16'b0000000000000000;
+assign add_i_imm = {add_i_sign, reg_f_d_out[16:0]};
+
+assign d_x_A_in = data_readRegA;
+assign d_x_B_in = data_readRegB;
+
+wire [31:0] d_x_A_in, d_x_A_out, d_x_B_in, d_x_B_out, d_x_S_out;
+falling_register reg_d_x_A(clock, 1'b1, reset, d_x_A_in, d_x_A_out);
+falling_register reg_d_x_B(clock, 1'b1, reset, d_x_B_in, d_x_B_out);
+falling_register reg_d_x_S(clock, 1'b1, reset, add_i_imm, d_x_S_out);
+
+
+wire [31:0] exe_pc;
+falling_register exe_reg_pc(clock, 1'b1, reset, fet_pc_out, exe_pc);
+
+/*****************************Execute*****************************/
+falling_register reg_x_m(clock, 1'b1, reset, reg_d_x_out, reg_x_m_out);
+
+wire [31:0] exe_pc_out;
+cla_32_bit exec_pc_add(exe_pc, d_x_S_out, 1'b0, exe_pc_out, placeholder, pc_neq, pc_lt);
+
+
+//Opcode
+wire [4:0] exe_opcode, exe_rd, exe_rs, exe_rt;
+assign exe_opcode = reg_d_x_out[31:27];
+assign exe_rd = reg_d_x_out[26:22]; 
+assign exe_rs = reg_d_x_out[21:17];
+assign exe_rt = reg_d_x_out[16:12];
+
+// //Addi sign extension
+// wire [31:0] add_i_imm;
+// //q_imem[16:0];
+// wire [15:0] add_i_sign;
+// //assign wren = 1'b0;
+
+// //Sign extension for negative addi
+// assign add_i_sign = reg_d_x_out[16] ? 16'b1111111111111111 : 16'b0000000000000000;
+// assign add_i_imm = {add_i_sign, reg_d_x_out[16:0]};
+
+assign pc_src = (exe_opcode == 5'b00010 & alu_notEqual) || (exe_opcode == 5'b00110 & alu_lessThan);
+
+//$rs
+//assign ctrl_readRegA = q_imem[21:17];
+//$rt
+//assign ctrl_readRegB = q_imem[16:12];
+
+//Shift amount
+wire [4:0] shamt;
+assign shamt = reg_d_x_out[11:7];
+
+//ALU OP
+wire [4:0] alu_op;
+assign alu_op = reg_d_x_out[6:2];
+//zeroes
+
+wire [4:0] add_OP, sub_OP, and_OP, or_OP, sll_OP, sra_OP;
+assign add_OP = 5'd0;
+assign sub_OP = 5'd1;
+
+//Selects either addi or normal alu operation
+wire is00000opcode;
+assign is00000opcode = exe_opcode == 0;
+
+// //MX Bypass
+//wire [31:0] alu_op_A;
+
+
+// assign alu_op_A = (exe_rs == mem_rd) ? ALU_res : d_x_A_out;
+
+//BNE = I
+
+wire [31:0] ALU_out;
+wire alu_lessThan, alu_notEqual, overFlow, nan;
+
+//module mux_4 (out, select, in0, in1, in2, in3);
+wire [31:0] alu_op_A, alu_op_B;
+wire [1:0] sel_A, sel_B;
+
+mux_4 mux_alu_a(alu_op_A, sel_A, d_x_A_out, data_writeReg, ALU_res, ALU_res);
+mux_4 mux_alu_b(alu_op_B, sel_B, d_x_B_out, data_writeReg, ALU_res, ALU_res);
+
+//assign alu_lessThan = d_x_A_out < d_x_B_out;
+
+
+
+alu alu(alu_op_A, alu_op_B_res, alu_act_op, shamt, ALU_out, alu_notEqual, alu_lessThan, overFlow);
+//assign address_imem = 32'b0;
+
+//5'b00101
+//module alu(data_operandA, data_operandB, ctrl_ALUopcode, ctrl_shiftamt, data_result, isNotEqual, isLessThan, overflow);
+wire [31:0] ALU_res, reg_e_2_out;
+
+wire [31:0] alu_op_B_res;
+
+assign alu_op_B_res = (is00000opcode || alu_is_branch) ? alu_op_B :  d_x_S_out;
+
+
+
+wire [4:0] alu_act_op, alu_is_addi;
+
+
+assign alu_is_addi = (exe_opcode == 5'b00101) ? add_OP :  alu_op;
+
+wire alu_is_branch = (exe_opcode == 5'b00010) || (exe_opcode == 5'b00110);
+assign alu_act_op = alu_is_branch ? sub_OP : alu_is_addi;
+
+
+
+falling_register reg_alu(clock, 1'b1, reset, ALU_out, ALU_res);
+falling_register reg_e_2(clock, 1'b1, reset, d_x_B_out, reg_e_2_out);
+//register reg_b(clock, 1'b1, reset, reg_x_m_out, reg_m_w_out);
+//alu alu(data_readRegA, add_i_imm, add_OP, 5'b0, temp_out, temp1, temp2, temp3);
+
+/*****************************Memory*****************************/
+falling_register reg_m_w(clock, 1'b1, reset, reg_x_m_out, reg_m_w_out);
+
+wire [4:0] mem_opcode, mem_rd, mem_rs, mem_rt;
+assign mem_opcode = reg_x_m_out[31:27];
+assign mem_rd = reg_x_m_out[26:22]; 
+assign mem_rs = reg_x_m_out[21:17];
+assign mem_rt = reg_x_m_out[16:12];
+
+//Only writes to the data memory if current operation is sw
+//assign wren = mem_opcode == 00111 ? 1'b1 : 1'b0;
+//data =
+
+//reg_x_m_out
+//$rd
+
+assign address_dmem = ALU_res;
+assign data = reg_e_2_out;
+//Writes RAM if lw
+
+//Only writes memory for sw
+assign wren = (mem_opcode == 5'b00111);
+
+
+wire [31:0] reg_m_alu_out, reg_m_read_out;
+falling_register reg_m_alu(clock, 1'b1, reset, ALU_res, reg_m_alu_out);
+falling_register reg_m_read(clock, 1'b1, reset, q_dmem, reg_m_read_out);
+
+/*****************************Write*****************************/
+wire [4:0] write_opcode, write_rd, write_rs, write_rt;
+assign write_opcode = reg_m_w_out[31:27];
+assign write_rd = reg_m_w_out[26:22]; 
+assign write_rs = reg_m_w_out[21:17];
+assign write_rt = reg_m_w_out[16:12];
+
+wire write_is_branch = (write_opcode == 5'b00010) || (write_opcode == 5'b00110);
+
+
+//Always writes memory except for sw
+assign ctrl_writeEnable = !(write_opcode == 5'b00111 || write_is_branch);
+
+//Register address to write to
+assign ctrl_writeReg = reg_m_w_out[26:22];
+
+//Register data to write
+assign data_writeReg = (write_opcode == 5'b01000) ? q_dmem : reg_m_alu_out;
+
+
+assign sel_A[1] = !(mem_opcode == 5'b00111) & (mem_rd == exe_rs) & (mem_rd != 0);
+
+assign sel_B[1] = !(mem_opcode == 5'b00111) & (mem_rd == exe_rt) & (mem_rd != 0);
+
+assign sel_A[0] = ctrl_writeEnable & (write_rd == exe_rs) & (write_rd != 0);
+
+assign sel_B[0] = ctrl_writeEnable &(write_rd == exe_rt) & (write_rd != 0);
+
+// assign sel_A[0] = 0;
+// assign sel_B[0] = 0;
+// assign sel_A[1] = 0;
+// assign sel_B[1] = 0;
+
+
+// mem_rd == exe_rs
+// mem_rd == exe_rt
+// write_rd = exe_rs
+// write_rd == exe_rt
+
+
+/* END CODE */
+endmodule
+

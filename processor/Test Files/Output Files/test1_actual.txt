@@ -1,0 +1,82 @@
+Cycle   8: Wrote 256 into register 29
+Cycle   9: Wrote 3840 into register 27
+Cycle  10: Wrote 50 into register 8
+Cycle  11: Wrote 3 into register 9
+Cycle  19: Wrote 1 into register 9
+Cycle  27: Wrote 4 into register 9
+Cycle  35: Wrote 2 into register 9
+Cycle  43: Wrote 50 into register 4
+Cycle  47: Wrote 202 into register 31
+Cycle  54: Wrote 257 into register 29
+Cycle  55: Wrote 50 into register 8
+Cycle  56: Wrote 0 into register 9
+Cycle  57: Wrote 0 into register 4
+Cycle  61: Wrote 67 into register 31
+Cycle  64: Wrote 3840 into register 27
+Cycle  68: Wrote 3840 into register 2
+Cycle  72: Wrote 3837 into register 11
+Cycle  76: Wrote 3 into register 10
+Cycle  86: Wrote 3 into register 4
+Cycle  87: Wrote 78 into register 31
+Cycle  90: Wrote 3837 into register 27
+Cycle  94: Wrote 3837 into register 2
+Cycle 117: Wrote 51 into register 8
+Cycle 121: Wrote 1 into register 10
+Cycle 125: Wrote 3837 into register 9
+Cycle 135: Wrote 3 into register 4
+Cycle 136: Wrote 78 into register 31
+Cycle 139: Wrote 3834 into register 27
+Cycle 143: Wrote 3834 into register 2
+Cycle 166: Wrote 52 into register 8
+Cycle 170: Wrote 4 into register 10
+Cycle 174: Wrote 3834 into register 9
+Cycle 184: Wrote 3 into register 4
+Cycle 185: Wrote 78 into register 31
+Cycle 188: Wrote 3831 into register 27
+Cycle 192: Wrote 3831 into register 2
+Cycle 215: Wrote 53 into register 8
+Cycle 219: Wrote 2 into register 10
+Cycle 223: Wrote 3831 into register 9
+Cycle 233: Wrote 3 into register 4
+Cycle 234: Wrote 78 into register 31
+Cycle 237: Wrote 3828 into register 27
+Cycle 241: Wrote 3828 into register 2
+Cycle 264: Wrote 54 into register 8
+Cycle 268: Wrote 0 into register 10
+Cycle 272: Wrote 3828 into register 9
+Cycle 277: Wrote 3837 into register 2
+Cycle 278: Wrote 256 into register 29
+Cycle 279: Wrote 202 into register 31
+============== Testing Mode ==============
+Reg  0:           0
+Reg  1:           0
+Reg  2:        3837
+Reg  3:           0
+Reg  4:           3
+Reg  5:           0
+Reg  6:           0
+Reg  7:           0
+Reg  8:          54
+Reg  9:        3828
+Reg 10:           0
+Reg 11:        3837
+Reg 12:           0
+Reg 13:           0
+Reg 14:           0
+Reg 15:           0
+Reg 16:           0
+Reg 17:           0
+Reg 18:           0
+Reg 19:           0
+Reg 20:           0
+Reg 21:           0
+Reg 22:           0
+Reg 23:           0
+Reg 24:           0
+Reg 25:           0
+Reg 26:           0
+Reg 27:        3828
+Reg 28:           0
+Reg 29:         256
+Reg 30:           0
+Reg 31:         202
