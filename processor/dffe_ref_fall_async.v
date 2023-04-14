@@ -17,13 +17,9 @@ module dffe_ref_fall_async (q, d, clk, en, clr);
    begin
        q = 1'b0;
    end
-   
-   // always @(clr) begin
-   //     q <= 1'b0;
-   // end
 
    //Set value of q on positive edge of the clock or clear
-   always @(negedge clk or clr or posedge en) begin
+   always @(posedge clk or posedge clr or posedge en) begin
 
        //If clear is high, set q to 0
        if (clr) begin
@@ -34,10 +30,5 @@ module dffe_ref_fall_async (q, d, clk, en, clr);
            q <= d;
        end
    end
-
-   always @(posedge clr) begin
-       
-   end
-
 
 endmodule

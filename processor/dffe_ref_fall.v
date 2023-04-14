@@ -19,7 +19,7 @@ module dffe_ref_fall (q, d, clk, en, clr);
    end
 
    //Set value of q on positive edge of the clock or clear
-   always @(negedge clk or negedge clr) begin
+   always @(negedge clk) begin
        //If clear is high, set q to 0
        if (clr) begin
            q <= 1'b0;

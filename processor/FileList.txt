@@ -4,9 +4,11 @@ alu_or.v
 alu_xor.v
 cla_32_bit.v
 cla_8_bit.v
+clock_divider.v
 counter_16.v
 counter_32.v
 counter_32_falling.v
+counter_5.v
 counter_64.v
 counter_64_falling.v
 decoder.v
@@ -20,6 +22,7 @@ falling_register_5.v
 full_adder.v
 half_adder.v
 lshifter.v
+move_one_step.v
 multdiv.v
 multdiv_tb.v
 multiplier.v
@@ -32,6 +35,7 @@ register.v
 register_5.v
 ROM.v
 rshifter.v
+stepper_controller.v
 tristate.v
 wallace_mult.v
 Wrapper.v

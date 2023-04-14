@@ -25,8 +25,10 @@ wire [31:0] signed_div, onee;
 wire placeholder, reset, cont;
 
 //counter
-wire [4:0] cout;
+wire [4:0] cout, cout1;
 counter_32 count(clock, start, cout);
+//counter_32_falling count1(clock, start, 1'b1, cout);
+
 
 mux_32_1 count_time(ready, cout, 1'b0, 1'b0, 1'b0, 1'b0, 1'b0, 1'b0, 1'b0, 1'b0, 1'b0, 1'b0, 1'b0, 1'b0, 1'b0, 1'b0, 1'b0, 1'b0, 1'b0, 1'b0, 1'b0, 1'b0, 1'b0, 1'b0, 1'b0, 1'b0, 1'b0, 1'b0, 1'b0, 1'b0, 1'b0, 1'b1, 1'b0, 1'b0);
 

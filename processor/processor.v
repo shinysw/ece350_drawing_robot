@@ -69,51 +69,23 @@ wire [31:0] address_imem_new, address_imem_curr, address_imem_add;
 wire pc_carry, pc_neq, pc_lt;
 cla_32_bit program_counter(address_imem, 32'b1, 1'b0, address_imem_add, pc_carry, pc_neq, pc_lt);
 
+wire reg_pc_w_en;
+//Program Counter PC
+falling_register reg_pc(clock, reg_pc_w_en, reset, address_imem_new, address_imem);
 
-/***********************Branch, Jump, PC stuff******************/
-wire is_branch, is_jump, take_bex;
+//Register for the +1 PC out
+wire [31:0] fet_pc_out;
+falling_register fet_pc(clock, reg_f_d_w_en, reset, address_imem_add, fet_pc_out);
 
-//True if branch and ALU conditions are met
-assign is_branch = (exe_is_bne & alu_notEqual) || (exe_is_blt & alu_lessThan);
-
-//True if jump or jal instruction
-assign is_jump = (exe_is_jump) || (exe_is_jal);
-
-wire stall_decode, stall_fetch, stall_execute, stall_memory;
-
-//Flushes the instructions in the fetch and decode pipeline whenever a branch/jump is taken
-assign stall_fetch = stall || is_jump || is_branch || exe_is_jr || (exe_is_bex & (alu_op_B != 0));
-assign stall_decode = is_jump || is_branch || exe_is_jr || (exe_is_bex & (alu_op_B != 0));
-assign stall_execute = 0;
-assign stall_memory = 0;
-
-wire [31:0] address_branch_t, addresss_branch_jr;
-
-//If branch, change address to new PC 
-assign address_branch_t = is_branch ? exe_pc_out : address_imem_add;
-//If jr, change address to specified $rt
-assign addresss_branch_jr = exe_is_jr ? alu_op_B : address_branch_t;
-//If jump or bex
-assign address_imem_new = is_jump || (exe_is_bex & (alu_op_B != 0)) ? exe_ji_t : addresss_branch_jr;
-
-assign wr_write_reset = 0;
-assign mem_write_reset = 0;
-/***********************Branch, Jump, PC stuff******************/
+//Register for the instruction
+wire reg_f_d_w_en;
+falling_register reg_f_d(clock, reg_f_d_w_en, reset, reg_f_d_out_inter, reg_f_d_out);
 
 wire [31:0] reg_f_d_out, reg_d_x_out, reg_x_m_out, reg_m_w_out;
 
 wire [31:0] reg_f_d_out_inter;
 assign reg_f_d_out_inter = stall_fetch ? 32'b0 : q_imem;
 
-wire reg_pc_w_en;
-//Program Counter PC
-falling_register reg_pc(clock, reg_pc_w_en, reset, address_imem_new, address_imem);
-
-wire reg_f_d_w_en;
-falling_register reg_f_d(clock, reg_f_d_w_en, reset, reg_f_d_out_inter, reg_f_d_out);
-
-wire [31:0] fet_pc_out;
-falling_register fet_pc(clock, reg_f_d_w_en, reset, address_imem_add, fet_pc_out);
 
 /*****************************Decode*****************************/
 wire [4:0] dec_opcode;
@@ -139,7 +111,6 @@ wire dec_is_blt = (dec_opcode == 5'b00110);
 wire dec_is_bex = (dec_opcode == 5'b10110);
 wire dec_is_setx = (dec_opcode == 5'b10101);
 
-
 //ALU opcode constants
 wire [4:0] add_OP, sub_OP, and_OP, or_OP, sll_OP, sra_OP;
 assign add_OP = 5'b00000;
@@ -151,46 +122,34 @@ assign sub_OP = 5'b00001;
 //Determines if data will be written to the regfile (write enable)
 wire dec_write_en = (dec_is_alu || dec_is_addi || dec_is_lw || dec_is_jal) || (dec_is_setx);
 
-//If instruction is a branch
+//Determines if instruction is a branch     
 wire dec_is_branch = dec_is_bne || dec_is_blt;
 
-//Determines which instructions write to reg_file 
 
+//Determines what $rs to read
 //For branch instructions $rd is read from instead of $rs to compare
 assign ctrl_readRegA = dec_is_bne || dec_is_blt ? dec_rd_parse : dec_rs_parse; 
 
-//Determines the destination register number
-wire [4:0] dec_rd, dec_exp;
-assign dec_exp = dec_is_setx ? 5'd30 : dec_rd_parse;
-assign dec_rd = dec_is_jal ? 5'd31 : dec_exp;
-
-//Determines if the alu uses the sign extended or other value. Only used for sw/lw & addi
-wire dec_alu_src;
-assign dec_alu_src = (dec_is_sw || dec_is_lw || dec_is_addi);
-
-//Determines if a branch will be made
-wire dec_branch;
-assign dec_branch = dec_is_bne || dec_is_blt;
-
+//Determines what $rt to read
+//For branches, [21:17] is read from instead of [16:12]
+//For jr, this needs to be $rd (makes it easier later for pipelining)
+//For bex and setx this needs to be $r30 for ALU operand check later on
+//For sw this is $rd
+//For everything else, defaults to [16:12]
 wire [4:0] dec_branch_B, dec_branch_B_status, dec_jr_B;
 assign ctrl_readRegB = dec_is_sw ? dec_rd_parse : dec_branch_B_status;
 assign dec_branch_B_status = (dec_is_bex || dec_is_setx) ? 5'd30 : dec_jr_B;
 assign dec_jr_B = dec_is_jr ? dec_rd_parse : dec_branch_B;
 assign dec_branch_B = dec_is_branch ? dec_rs_parse : dec_rt_parse;
 
-//Selects data to be stored into register file
-//All arithmetic and addi instructions uses ALU_out, lw uses dmem, jal uses write_pc
-wire [1:0] dec_mem_to_reg;
-assign dec_mem_to_reg[0] = dec_is_jal;
-assign dec_mem_to_reg[1] = dec_is_lw;
-
-wire alu_op_B_sel;
+//Determines the destination register number. Defaults to $rd except for $r30 and $r31 exceptions
+wire [4:0] dec_rd, dec_exp;
+assign dec_exp = dec_is_setx ? 5'd30 : dec_rd_parse;
+assign dec_rd = dec_is_jal ? 5'd31 : dec_exp;
 
 //Addi sign extension
 wire [31:0] add_i_imm;
-//q_imem[16:0];
 wire [15:0] add_i_sign;
-//assign wren = 1'b0;
 
 //Sign extension for negative addi
 assign add_i_sign = reg_f_d_out[16] ? 16'b1111111111111111 : 16'b0000000000000000;
@@ -200,6 +159,7 @@ assign add_i_imm = {add_i_sign, reg_f_d_out[16:0]};
 assign d_x_A_in = data_readRegA;
 assign d_x_B_in = data_readRegB;
 
+//Pipeline Latch Stuff
 wire [31:0] d_x_A_in, d_x_A_out, d_x_B_in, d_x_B_out, d_x_S_out;
 wire [31:0] d_x_A_in_inter, d_x_B_in_inter, d_x_S_in_inter;
 
@@ -236,6 +196,7 @@ wire [31:0] reg_d_x_out_inter;
 assign reg_d_x_out_inter = stall_decode ? 32'b0 : reg_f_d_out;
 
 falling_register reg_d_x(clock, reg_d_x_w_en, reset, reg_d_x_out_inter, reg_d_x_out);
+
 /*****************************Execute*****************************/
 //Passed WE
 wire exe_write_en;
@@ -265,6 +226,7 @@ wire exe_is_blt = (exe_opcode == 5'b00110);
 wire exe_is_bex = (exe_opcode == 5'b10110);
 wire exe_is_setx = (exe_opcode == 5'b10101);
 
+
 //Pad bits for JI target
 wire [31:0] exe_ji_t = {5'b0, reg_d_x_out[26:0]};
 
@@ -284,16 +246,18 @@ assign is00000opcode = exe_opcode == 0;
 wire [31:0] ALU_out;
 wire alu_lessThan, alu_notEqual, alu_overFlow, nan;
 
-//module mux_4 (out, select, in0, in1, in2, in3);
 wire [31:0] alu_op_A, alu_op_B;
 wire [1:0] sel_A, sel_B;
 
-
-
+//If instruction uses PC = T, switch ALU output to T
 wire [31:0] data_alu_out;
 assign data_alu_out =  (exe_is_bex & exe_ji_t != 0) ? exe_ji_t : ALU_res;
 
 //Mux select for bypassing
+//module mux_4 (out, select, in0, in1, in2, in3);
+//OUT 0 = Default from previous decode
+//OUT 1 = Bypass from memory 
+//OUT 2 = Bypass from previous ALU result
 mux_4 mux_alu_a(alu_op_A, sel_A, d_x_A_out, data_writeReg, ALU_res, ALU_res);
 mux_4 mux_alu_b(alu_op_B, sel_B, d_x_B_out, data_writeReg, data_alu_out, data_writeReg);
 
@@ -311,29 +275,17 @@ assign is_div = (alu_op == 5'b00111) && (exe_is_alu);
 
 wire mult_op, div_op, multdiv_exp, mult_ready, div_ready;
 
-assign reg_pc_w_en = !(is_div && !div_ready);
+dffe_ref_fall dff_0(div_op, (timer_out == 6'b111111), clock, 1'b1, 1'b0);
 
-assign reg_f_d_w_en = !(stall || (is_div && !div_ready));
-
-//assign reg_f_d_w_en = !(is_div && !div_ready);
-assign reg_d_x_w_en = !(is_div && !div_ready);
-assign reg_x_m_w_en = !(is_div && !div_ready);
-assign reg_m_w_w_en = !(is_div && !div_ready);
-assign temp_mem_en = !(is_div && !div_ready);
-
-dffe_ref_fall_async dff_0(div_op, (timer_out == 6'b111111), clock, 1'b1, 1'b0);
-
+//Counter for mult_div ready
 //module counter_64 (clk, rst, out);
 wire timer_rst, sing_pulse, counter_en;
 wire [5:0] timer_out;
 counter_64_falling timer(clock, timer_rst, counter_en, timer_out);
 
 assign counter_en = is_div;
-
-assign sing_pulse = (timer_out == 6'b000001);
-
+//assign sing_pulse = (timer_out == 6'b000001);
 assign timer_rst = div_ready;
-
 assign mult_op = is_mult;
 //assign div_op = (timer_out == 6'b111111);
 
@@ -342,17 +294,18 @@ multdiv multdiv(alu_op_A, alu_op_B_res, mult_op, div_op, clock, multdiv_res, mul
 wire [31:0] ALU_res, reg_e_2_out, exe_ji_t_out;
 wire [31:0] alu_op_B_res;
 
-//assign alu_op_B_res = (is00000opcode || alu_is_branch) ? alu_op_B :  d_x_S_out;
+//Selects between the sign extended and data from reg B for certain instructions
+wire alu_is_branch = (exe_opcode == 5'b00010) || (exe_opcode == 5'b00110);
 assign alu_op_B_res = (is00000opcode || alu_is_branch) ? alu_op_B : d_x_S_out;
-
 wire [4:0] alu_act_op, alu_is_addi;
 
-
+//Selects the correct opcode depending on the instruction
 assign alu_is_addi = exe_is_addi ? add_OP : alu_op;
 assign alu_act_op = alu_is_branch ? sub_OP : alu_is_addi;
 
-wire alu_is_branch = (exe_opcode == 5'b00010) || (exe_opcode == 5'b00110);
 
+//Exception data to write out to $rstatus
+//add:1, addi:2, sub:3, mul:4, div:5
 wire [2:0] r_status_sel;
 assign r_status_sel = (exe_is_addi) ? 3'd3 : alu_op[2:0];
 
@@ -363,11 +316,8 @@ mux_8 exe_rstatus(exe_rstatus_out, r_status_sel, 32'd1, 32'd3, 32'd2, 32'd2, 32'
 wire div_exp = is_div && alu_op_B == 0;
 
 wire [31:0] ALU_out_or_exp;
-// assign ALU_out_or_exp = (alu_overFlow || multdiv_exp) ? exe_rstatus_out : ALU_inter;
-// assign ALU_out = (is_mult || is_div) ? multdiv_res : ALU_out_or_exp;
 assign ALU_out = (alu_overFlow || multdiv_exp || div_exp) ? exe_rstatus_out : ALU_out_or_exp;
 assign ALU_out_or_exp = (is_mult || is_div) ? multdiv_res : ALU_inter;
-
 
 wire [31:0] reg_x_m_out_inter;
 assign reg_x_m_out_inter = stall_execute ? 32'b0 : reg_d_x_out;
@@ -375,17 +325,17 @@ assign reg_x_m_out_inter = stall_execute ? 32'b0 : reg_d_x_out;
 wire reg_x_m_w_en;
 falling_register reg_x_m(clock, reg_x_m_w_en, reset, reg_x_m_out_inter, reg_x_m_out);
 
+//ALU output
 falling_register reg_alu(clock, reg_x_m_w_en, reset, ALU_out, ALU_res);
 
+//Raw data from readregB ($rt data)
 falling_register reg_e_2(clock, reg_x_m_w_en, reset, d_x_B_out, reg_e_2_out);
 
+//Padded bits for ji_t 
 falling_register reg_exe_ji_t(clock, reg_x_m_w_en, reset, exe_ji_t, exe_ji_t_out);
-//register reg_b(clock, 1'b1, reset, reg_x_m_out, reg_m_w_out);
-//alu alu(data_readRegA, add_i_imm, add_OP, 5'b0, temp_out, temp1, temp2, temp3);
 
 wire [31:0] mem_pc;
 falling_register mem_reg_pc(clock, reg_x_m_w_en, reset, exe_pc, mem_pc);
-
 
 wire [4:0] mem_rs, mem_rt, mem_rd;
 wire [4:0] exe_rs_inter, exe_rt_inter, exe_rd_inter, exe_rd_exp;
@@ -413,7 +363,7 @@ dffe_ref_fall mem_alu_ovf(mem_alu_exp, alu_overFlow, clock, reg_m_w_w_en, reset)
 wire mem_write_en, mem_write_reset;
 dffe_ref_fall mem_we(mem_write_en, exe_write_en, clock, reg_m_w_w_en, mem_write_reset);
 
-
+//OP code select
 wire [4:0] mem_opcode = reg_x_m_out[31:27];
 
 wire mem_is_branch = (mem_opcode == 5'b00010) || (mem_opcode == 5'b00110);
@@ -427,7 +377,9 @@ wire [31:0] ram_data;
 wire mem_bypass = (mem_rt == write_rd) & (ctrl_writeEnable) & mem_is_sw; 
 assign ram_data = (mem_rt == write_rd) & (ctrl_writeEnable) ? data_writeReg : reg_e_2_out;
 
+//Adress to store word into
 assign address_dmem = ALU_res;
+//Data to write into RAM
 assign data = ram_data;
 
 //Only writes memory for sw
@@ -486,25 +438,64 @@ assign ctrl_writeReg = write_rd;
 //All arithmetic and addi instructions uses ALU_out, lw uses dmem write_pc
 
 //Determines final data to be written out
+//Changes for jal, lw, and setx, otherwise defaults to the ALU result
 wire [31:0] lw_data, data_write_jal, data_write_setx;
 assign lw_data = write_is_lw ? reg_m_read_out : reg_m_alu_out;
 assign data_write_jal = write_is_jal ? write_pc : lw_data;
 assign data_writeReg = write_is_setx ? mem_ji_t_out : data_write_jal;
+
+/***********************Branch, Jump, PC, Hazard stuff******************/
 
 //Determines if there is a write hazard for any instruction that uses rs
 assign sel_A[0] = ctrl_writeEnable & (write_rd == exe_rs) & (write_rd != 0);
 //Determines if there is a memory hazard for any instruction that uses rs
 assign sel_A[1] = !(mem_opcode == 5'b00111) & (mem_rd == exe_rs) & (mem_rd != 0);
 
-
 //Determines if there is a write hazard for any instruction that uses rt
 assign sel_B[0] = ctrl_writeEnable & (write_rd == exe_rt) & (write_rd != 0);
 //Determines if there ia a memory hazard for any instruction that uses rt
 assign sel_B[1] = !(mem_opcode == 5'b00111) & (mem_rd == exe_rt) & (mem_rd != 0);
 
-
 wire stall;
-
 assign stall = exe_is_lw & ((dec_rs == exe_rd) || ((dec_rt == exe_rd) & (!dec_is_sw)));
+
+wire is_branch, is_jump, take_bex;
+
+//True if branch and ALU conditions are met
+assign is_branch = (exe_is_bne & alu_notEqual) || (exe_is_blt & alu_lessThan);
+
+//True if jump or jal instruction
+assign is_jump = (exe_is_jump) || (exe_is_jal);
+
+wire stall_decode, stall_fetch, stall_execute, stall_memory;
+
+//Flushes the instructions in the fetch and decode pipeline whenever a branch/jump is taken
+assign stall_fetch = stall || is_jump || is_branch || exe_is_jr || (exe_is_bex & (alu_op_B != 0));
+assign stall_decode = is_jump || is_branch || exe_is_jr || (exe_is_bex & (alu_op_B != 0));
+assign stall_execute = 0;
+assign stall_memory = 0;
+
+//Stalls all the intermediate pipeline registers 
+assign reg_pc_w_en = !(is_div && !div_ready);
+assign reg_f_d_w_en = !(stall || (is_div && !div_ready));
+assign reg_d_x_w_en = !(is_div && !div_ready);
+assign reg_x_m_w_en = !(is_div && !div_ready);
+assign reg_m_w_w_en = !(is_div && !div_ready);
+assign temp_mem_en = !(is_div && !div_ready);
+
+wire [31:0] address_branch_t, addresss_branch_jr;
+
+//If branch, change address to new PC 
+assign address_branch_t = is_branch ? exe_pc_out : address_imem_add;
+//If jr, change address to specified $rt
+assign addresss_branch_jr = exe_is_jr ? alu_op_B : address_branch_t;
+//If jump or bex
+assign address_imem_new = is_jump || (exe_is_bex & (alu_op_B != 0)) ? exe_ji_t : addresss_branch_jr;
+
+assign wr_write_reset = 0;
+assign mem_write_reset = 0;
+
+/***********************Branch, Jump, PC stuff******************/
+
 
 endmodule

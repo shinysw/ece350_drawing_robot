@@ -43,7 +43,9 @@ module Wrapper_tb #(parameter FILE = "nop");
 	localparam DEFAULT_CYCLES = 255;
 
 	// Inputs to the processor
-	reg clock = 0, reset = 0;
+	//reg clock = 0, clockIn = 0, reset = 0;
+	reg clockIn = 0, reset = 0;
+	wire clock;
 
 	// I/O for the processor
 	wire rwe, mwe;
@@ -78,6 +80,16 @@ module Wrapper_tb #(parameter FILE = "nop");
 	integer errors = 0,
 			cycles = 0,
 			reg_to_test = 0;
+
+	Clock_divider Clock_divider(.clock_in(clockIn), .clock_out(clock));
+
+	wire stepOutput;
+	stepper_controller stepper_controller (.clk(clockIn), .numOfSteps (32'd1000), .timeBetweenSteps(32'd10), .stepOutput (stepOutput));
+
+	wire test;
+	move_one_step move_one_step(.clock_in(clockIn), .out(test));
+
+//clock_divider clock_divider (.CLK100MHZ(clockIn), .CLK_OUT(clock), .N(32'd5));
 
 	// Main Processing Unit
 	processor CPU(.clock(clock), .reset(reset), 
@@ -116,7 +128,10 @@ module Wrapper_tb #(parameter FILE = "nop");
 
 	// Create the clock
 	always
-		#10 clock = ~clock; 
+	//clockIn
+		//#5 clock = ~clock; 
+		#5 clockIn = ~clockIn; 
+
 
 	//////////////////
 	// Test Harness //

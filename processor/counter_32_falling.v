@@ -1,6 +1,6 @@
-module counter_32_falling (clk, rst, out);
+module counter_32_falling (clk, rst, en, out);
 
-input clk, rst;
+input clk, rst, en;
 output [4:0] out;
 
   wire trig;
@@ -11,11 +11,11 @@ output [4:0] out;
 
     assign clr = rst;
 
-dffe_ref_fall_async dff_a(q0, !q0, clk, 1'b1, clr);
-dffe_ref_fall_async dff_b(q1, !q1, q0, 1'b1, clr);
-dffe_ref_fall_async dff_c(q2, !q2, q1, 1'b1, clr);
-dffe_ref_fall_async dff_d(q3, !q3, q2, 1'b1, clr);
-dffe_ref_fall_async dff_e(q4, !q4, q3, 1'b1, clr);
+dffe_ref_fall_async dff_a(q0, !q0, clk, en, clr);
+dffe_ref_fall_async dff_b(q1, !q1, q0, en, clr);
+dffe_ref_fall_async dff_c(q2, !q2, q1, en, clr);
+dffe_ref_fall_async dff_d(q3, !q3, q2, en, clr);
+dffe_ref_fall_async dff_e(q4, !q4, q3, en, clr);
 
 //nand rst(clr, q0, q1, q2, q3);
 

@@ -24,8 +24,15 @@
  *
  **/
 
-module Wrapper (clock, reset);
+module Wrapper (clock, reset, regAData, stepper_x_out);
 	input clock, reset;
+
+	output [15:0] regAData;
+	output stepper_x_out;
+	
+	wire test;
+	assign stepper_x_out = test;
+	move_one_step move_one_step(.clock_in(clock), .out(test));
 
 	wire rwe, mwe;
 	wire[4:0] rd, rs1, rs2;
@@ -35,7 +42,8 @@ module Wrapper (clock, reset);
 
 
 	// ADD YOUR MEMORY FILE HERE
-	localparam INSTR_FILE = "";
+	//localparam INSTR_FILE = "";
+	localparam INSTR_FILE = "C:/Users/shiny/Desktop/ShinySw/School/ECE350/processor/processor/Test Files/Memory Files/test32";
 	
 	// Main Processing Unit
 	processor CPU(.clock(clock), .reset(reset), 
@@ -71,5 +79,8 @@ module Wrapper (clock, reset);
 		.addr(memAddr[11:0]), 
 		.dataIn(memDataIn), 
 		.dataOut(memDataOut));
+
+	assign regAData = regA[15:0];
+	//assign regBData = regB;
 
 endmodule
