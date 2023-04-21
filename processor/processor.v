@@ -360,10 +360,10 @@ wire[27:0] stall_time;
 assign stall_time = 27'd2839123; // ARBITRARY FOR NOW, WILL GET ACTUAL NUMBER LATER
 always @(posedge clk) begin
     if (exe_opcode == 5'b11101) begin
-        stalling stalling(clk, 1'b1, stall_time, stall_out);
+        stall_out = 1'b1;
     end
 end
-
+stalling stalling(clk, 1'b1, stall_time, stall_out);
 
 /*****************************Memory*****************************/
 wire [31:0] write_pc;
@@ -517,20 +517,21 @@ assign mem_write_reset = 0;
 endmodule
 
 module stalling(clk, start, stalltime, out);
-    input start;
+    input clk, start;
     input[27:0] stalltime;
     output out;
      // MULTIPLY SECONDS BY 10^8 need 27 bits
-    wire rst;
+    wire rst, outtemp;
     assign rst = 1'b0;
     
-    assign out = 1'b1;
+    assign out = outtemp;
+    assign outtemp = 1'b0;
     wire[27:0] count;
     counter_64 counter(clk, rst, count);
     always @(posedge clk) begin
         if (count == stalltime) begin
             rst = 1'b1; 
-            out = 1'b0;
+            outtemp = 1'b0;
         end
     end
 
