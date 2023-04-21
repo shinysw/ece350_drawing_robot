@@ -1,0 +1,65 @@
+./processor/alu_or.v
+./processor/tristate.v
+./processor/cla_32_bit.v
+./processor/stepper_controller.v
+./processor/New folder/alu.v
+./processor/New folder/multdiv.v
+./processor/New folder/divider.v
+./processor/New folder/pulse_circuit.v
+./processor/New folder/wallace_mult.v
+./processor/servo.v
+./processor/move_one_step.v
+./processor/alu.v
+./processor/register.v
+./processor/dffe_ref_fall.v
+./processor/multdiv.v
+./processor/counter_64_falling.v
+./processor/counter_32_falling.v
+./processor/dffe_ref_fall_async_init_one.v
+./processor/dffe_ref_fall_async.v
+./processor/multdiv_tb.v
+./processor/alu_and.v
+./processor/multiplier.v
+./processor/half_adder.v
+./processor/Wrapper_tb.v
+./processor/register_5.v
+./processor/divider.v
+./processor/counter_32.v
+./processor/lshifter.v
+./processor/dffe_ref.v
+./processor/Wrapper.v
+./processor/mux_1.v
+./processor/RAM.v
+./processor/full_adder.v
+./processor/counter_27.v
+./processor/movement/control.v
+./processor/mux.v
+./processor/processor.v
+./processor/regfile.v
+./processor/clock_divider.v
+./processor/counter_16.v
+./processor/falling_register_5.v
+./processor/cla_8_bit.v
+./processor/alu_xor.v
+./processor/rshifter.v
+./processor/decoder.v
+./processor/counter_64.v
+./processor/Provided Behavioral Components/alu.v
+./processor/Provided Behavioral Components/multdiv.v
+./processor/Provided Behavioral Components/multiplier.v
+./processor/Provided Behavioral Components/divider.v
+./processor/Provided Behavioral Components/dffe_ref.v
+./processor/Provided Behavioral Components/regfile.v
+./processor/ROM.v
+./processor/wallace_mult.v
+./processor/falling_register.v
+./Wrapper.v
+./RAM.v
+./processor.v
+./Provided Behavioral Components/alu.v
+./Provided Behavioral Components/multdiv.v
+./Provided Behavioral Components/multiplier.v
+./Provided Behavioral Components/divider.v
+./Provided Behavioral Components/dffe_ref.v
+./Provided Behavioral Components/regfile.v
+./ROM.v

@@ -353,7 +353,7 @@ falling_register_5 reg_exe_rd(clock, reg_x_m_w_en, reset, exe_rd_inter, mem_rd);
 
 // CUSTOM COMMAND exe_opcode
 // OPCODE FOR PRESET COMMANDS 11101
-wire stall_out;
+wire stall_out, stall_counter_reset;
 assign stall_out = 1'b0;
 
 wire[27:0] stall_time;
@@ -485,10 +485,11 @@ assign is_jump = (exe_is_jump) || (exe_is_jal);
 wire stall_decode, stall_fetch, stall_execute, stall_memory;
 
 //Flushes the instructions in the fetch and decode pipeline whenever a branch/jump is taken
-assign stall_fetch = stall || is_jump || is_branch || exe_is_jr || (exe_is_bex & (alu_op_B != 0));
-assign stall_decode = is_jump || is_branch || exe_is_jr || (exe_is_bex & (alu_op_B != 0));
-assign stall_execute = 0;
-assign stall_memory = 0;
+// ADD THE PRESET STALL 
+assign stall_fetch = stall || is_jump || is_branch || exe_is_jr || (exe_is_bex & (alu_op_B != 0)) || stall_out;
+assign stall_decode = is_jump || is_branch || exe_is_jr || (exe_is_bex & (alu_op_B != 0)) || stall_out;
+assign stall_execute = 0 || stall_out;
+assign stall_memory = 0 || stall_out;
 
 //Stalls all the intermediate pipeline registers 
 assign reg_pc_w_en = !(is_div && !div_ready);
@@ -523,12 +524,12 @@ module stalling(clk, start, stalltime, out);
     wire rst;
     assign rst = 1'b0;
     
-    assign out = 1'b1'
+    assign out = 1'b1;
     wire[27:0] count;
     counter_64 counter(clk, rst, count);
 
     if (count == stalltime) begin
-       rst = 1'b1; 
+        rst = 1'b1; 
         out = 1'b0;
     end
 

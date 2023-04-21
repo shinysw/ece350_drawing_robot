@@ -3,7 +3,7 @@ module mux_2 (out, select, in0, in1);
 	input [31:0] in0, in1;
 	output [31:0] out;
 	assign out = select ? in1 : in0;
-endmodule  
+endmodule 
 
 module mux_4 (out, select, in0, in1, in2, in3);
 	input [1:0] select;
