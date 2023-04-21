@@ -24,15 +24,24 @@
  *
  **/
 
-module Wrapper (clock, reset, regAData, stepper_x_out);
-	input clock, reset;
+module Wrapper (clock, reset, regAData, stepper_x_out, servo_out, switches);
+	input clock, reset, switches;
 
 	output [15:0] regAData;
-	output stepper_x_out;
+	output stepper_x_out, servo_out;
 	
 	wire test;
 	assign stepper_x_out = test;
+
+	wire servo_var;
+	assign servo_out = servo_var;
 	move_one_step move_one_step(.clock_in(clock), .out(test));
+	
+    wire [31:0] duty_cycle;
+    assign duty_cycle = switches ? 32'd100000 : 32'd200000 ;
+
+	servo servo( .clock_in(clock), .out(servo_var), .duty(duty_cycle) );
+
 
 	wire rwe, mwe;
 	wire[4:0] rd, rs1, rs2;

@@ -57,7 +57,7 @@ module Wrapper_tb #(parameter FILE = "nop");
 	// Wires for Test Harness
 	wire[4:0] rs1_test, rs1_in;
 	reg testMode = 0; 
-	reg[9:0] num_cycles = DEFAULT_CYCLES;
+	reg[31:0] num_cycles = DEFAULT_CYCLES;
 	reg[15*8:0] exp_text;
 	reg null;
 
@@ -84,12 +84,12 @@ module Wrapper_tb #(parameter FILE = "nop");
 	Clock_divider Clock_divider(.clock_in(clockIn), .clock_out(clock));
 
 	wire stepOutput;
-	stepper_controller stepper_controller (.clk(clockIn), .numOfSteps (32'd1000), .timeBetweenSteps(32'd10), .stepOutput (stepOutput));
+	stepper_controller stepper_controller (.clk(clockIn), .numOfSteps (32'd100), .cyclesBetweenSteps(32'd1000), .stepOutput (stepOutput));
 
 	wire test;
 	move_one_step move_one_step(.clock_in(clockIn), .out(test));
 
-//clock_divider clock_divider (.CLK100MHZ(clockIn), .CLK_OUT(clock), .N(32'd5));
+	//clock_divider clock_divider (.CLK100MHZ(clockIn), .CLK_OUT(clock), .N(32'd5));
 
 	// Main Processing Unit
 	processor CPU(.clock(clock), .reset(reset), 
