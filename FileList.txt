@@ -2,11 +2,6 @@
 ./processor/tristate.v
 ./processor/cla_32_bit.v
 ./processor/stepper_controller.v
-./processor/New folder/alu.v
-./processor/New folder/multdiv.v
-./processor/New folder/divider.v
-./processor/New folder/pulse_circuit.v
-./processor/New folder/wallace_mult.v
 ./processor/servo.v
 ./processor/move_one_step.v
 ./processor/alu.v
@@ -26,10 +21,8 @@
 ./processor/divider.v
 ./processor/counter_32.v
 ./processor/lshifter.v
-./processor/dffe_ref.v
 ./processor/Wrapper.v
 ./processor/mux_1.v
-./processor/RAM.v
 ./processor/full_adder.v
 ./processor/counter_27.v
 ./processor/movement/control.v
@@ -45,10 +38,7 @@
 ./processor/decoder.v
 ./processor/counter_64.v
 ./processor/Provided Behavioral Components/dffe_ref.v
-./processor/ROM.v
 ./processor/wallace_mult.v
 ./processor/falling_register.v
-./Wrapper.v
 ./RAM.v
-./processor.v
 ./ROM.v
