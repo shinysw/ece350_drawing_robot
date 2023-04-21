@@ -529,8 +529,8 @@ module stalling(clk, start, stalltime, out);
     counter_64 counter(clk, rst, count);
 
     if (count == stalltime) begin
-        rst = 1'b1; 
-        out = 1'b0;
+        assign rst = 1'b1; 
+        assign out = 1'b0;
     end
 
 endmodule

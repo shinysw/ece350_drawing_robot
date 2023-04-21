@@ -21,7 +21,6 @@
 ./processor/divider.v
 ./processor/counter_32.v
 ./processor/lshifter.v
-./processor/Wrapper.v
 ./processor/mux_1.v
 ./processor/full_adder.v
 ./processor/counter_27.v
@@ -40,5 +39,6 @@
 ./processor/Provided Behavioral Components/dffe_ref.v
 ./processor/wallace_mult.v
 ./processor/falling_register.v
-./RAM.v
-./ROM.v
+./processor/RAM.v
+./processor/ROM.v
+./processor/Wrapper.v
