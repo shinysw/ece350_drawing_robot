@@ -1,4 +1,4 @@
-module move_one_step(clock_in, out, move1, move2);
+module move_one_step(clock_in, out);
     
 input clock_in; // input clock on FPGA
 output reg out; // output clock after dividing the input clock by divisor

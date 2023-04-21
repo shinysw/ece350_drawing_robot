@@ -357,12 +357,12 @@ wire stall_out, stall_counter_reset;
 assign stall_out = 1'b0;
 
 wire[27:0] stall_time;
-assign stall_time = 27'b100000; // ARBITRARY FOR NOW, WILL GET ACTUAL NUMBER LATER
-
-if (exe_opcode == 5'b11101) begin
-    stalling(clk, 1'b1, stall_time, stall_out);
+assign stall_time = 27'd2839123; // ARBITRARY FOR NOW, WILL GET ACTUAL NUMBER LATER
+always @(posedge clk) begin
+    if (exe_opcode == 5'b11101) begin
+        stalling stalling(clk, 1'b1, stall_time, stall_out);
+    end
 end
-
 
 
 /*****************************Memory*****************************/
@@ -527,10 +527,11 @@ module stalling(clk, start, stalltime, out);
     assign out = 1'b1;
     wire[27:0] count;
     counter_64 counter(clk, rst, count);
-
-    if (count == stalltime) begin
-        assign rst = 1'b1; 
-        assign out = 1'b0;
+    always @(posedge clk) begin
+        if (count == stalltime) begin
+            rst = 1'b1; 
+            out = 1'b0;
+        end
     end
 
 endmodule
