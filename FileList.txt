@@ -44,22 +44,11 @@
 ./processor/rshifter.v
 ./processor/decoder.v
 ./processor/counter_64.v
-./processor/Provided Behavioral Components/alu.v
-./processor/Provided Behavioral Components/multdiv.v
-./processor/Provided Behavioral Components/multiplier.v
-./processor/Provided Behavioral Components/divider.v
 ./processor/Provided Behavioral Components/dffe_ref.v
-./processor/Provided Behavioral Components/regfile.v
 ./processor/ROM.v
 ./processor/wallace_mult.v
 ./processor/falling_register.v
 ./Wrapper.v
 ./RAM.v
 ./processor.v
-./Provided Behavioral Components/alu.v
-./Provided Behavioral Components/multdiv.v
-./Provided Behavioral Components/multiplier.v
-./Provided Behavioral Components/divider.v
-./Provided Behavioral Components/dffe_ref.v
-./Provided Behavioral Components/regfile.v
 ./ROM.v

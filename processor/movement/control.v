@@ -12,9 +12,7 @@ module servo_control(clk, reset, duty_cycle, signal);
         end
         else begin
             counter <= 0;
-            clkMZ = ~clkMZ
+            clkMZ = ~clkMZ;
         end
     end
-
-
 endmodule
