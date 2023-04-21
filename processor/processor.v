@@ -350,6 +350,21 @@ falling_register_5 reg_exe_rs(clock, reg_x_m_w_en, reset, exe_rs_inter, mem_rs);
 falling_register_5 reg_exe_rt(clock, reg_x_m_w_en, reset, exe_rt_inter, mem_rt);
 falling_register_5 reg_exe_rd(clock, reg_x_m_w_en, reset, exe_rd_inter, mem_rd);
 
+
+// CUSTOM COMMAND exe_opcode
+// OPCODE FOR PRESET COMMANDS 11101
+wire stall_out;
+assign stall_out = 1'b0;
+
+wire[27:0] stall_time;
+assign stall_time = 27'b100000; // ARBITRARY FOR NOW, WILL GET ACTUAL NUMBER LATER
+
+if (exe_opcode == 5'b11101) begin
+    stalling(clk, 1'b1, stall_time, stall_out);
+end
+
+
+
 /*****************************Memory*****************************/
 wire [31:0] write_pc;
 falling_register write_reg_pc(clock, reg_m_w_w_en, reset, mem_pc, write_pc);
@@ -497,5 +512,24 @@ assign mem_write_reset = 0;
 
 /***********************Branch, Jump, PC stuff******************/
 
+
+endmodule
+
+module stalling(clk, start, stalltime, out);
+    input start;
+    input[27:0] stalltime;
+    output out;
+     // MULTIPLY SECONDS BY 10^8 need 27 bits
+    wire rst;
+    assign rst = 1'b0;
+    
+    assign out = 1'b1'
+    wire[27:0] count;
+    counter_64 counter(clk, rst, count);
+
+    if (count == stalltime) begin
+       rst = 1'b1; 
+        out = 1'b0;
+    end
 
 endmodule

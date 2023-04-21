@@ -1,4 +1,4 @@
-module move_one_step(clock_in, out);
+module move_one_step(clock_in, out, move1, move2);
     
 input clock_in; // input clock on FPGA
 output reg out; // output clock after dividing the input clock by divisor
@@ -12,7 +12,7 @@ initial out = 0;
 // For example: Fclk_in = 50Mhz, if you want to get 1Hz signal to blink LEDs
 // You will modify the DIVISOR parameter value to 28'd50.000.000
 // Then the frequency of the output clk_out = 50Mhz/50.000.000 = 1Hz
-always @(posedge clock_in)
+always @(posedge clock_in) begin
     if(counter > 28'd1000000) begin
         counter <= 28'd0;
         //clock_out <= (counter< DIVISOR / 2) ? 1'b1 : 1'b0;
@@ -26,6 +26,7 @@ always @(posedge clock_in)
         out <= 1;
 
     end
+end
 
 
 endmodule
