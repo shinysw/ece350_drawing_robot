@@ -84,12 +84,17 @@ module Wrapper_tb #(parameter FILE = "stalltest.mem");
 	Clock_divider Clock_divider(.clock_in(clockIn), .clock_out(clock));
 
 	wire stepOutput;
-	stepper_controller stepper_controller (.clk(clockIn), .numOfSteps (32'd100), .cyclesBetweenSteps(32'd1000), .stepOutput (stepOutput));
+
+	wire en;
+	assign en = 1;
+	stepper_controller stepper_controller (.en(en),.clk(clockIn), .numOfSteps (32'd5), .cyclesBetweenSteps(32'd1000), .stepOutput (stepOutput));
 
 	wire test;
 	move_one_step move_one_step(.clock_in(clockIn), .out(test));
 
 	//clock_divider clock_divider (.CLK100MHZ(clockIn), .CLK_OUT(clock), .N(32'd5));
+
+	wire[31:0] step_x_dir, step_y_dir, step_x_speed, step_y_speed;
 
 	// Main Processing Unit
 	processor CPU(.clock(clock), .reset(reset), 
@@ -117,6 +122,7 @@ module Wrapper_tb #(parameter FILE = "stalltest.mem");
 		.ctrl_writeEnable(rwe), .ctrl_reset(reset), 
 		.ctrl_writeReg(rd),
 		.ctrl_readRegA(rs1_in), .ctrl_readRegB(rs2), 
+		.step_x_dir(step_x_dir), .step_y_dir(step_y_dir), .step_x_speed(step_x_speed), .step_y_speed(step_y_speed),
 		.data_writeReg(rData), .data_readRegA(regA), .data_readRegB(regB));
 						
 	// Processor Memory (RAM)

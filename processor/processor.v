@@ -359,7 +359,7 @@ assign stall_out = exe_opcode == 5'b11101 ? 1'b1 : 1'b0;
 wire[27:0] stall_time;
 assign stall_time = 27'd2839123; // ARBITRARY FOR NOW, WILL GET ACTUAL NUMBER LATER
 
-stalling stalling(clk, 1'b1, stall_time, stall_out);
+stalling stalling(clock, 1'b1, stall_time, stall_out);
 
 /*****************************Memory*****************************/
 wire [31:0] write_pc;

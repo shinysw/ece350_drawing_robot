@@ -36,6 +36,15 @@ module Wrapper (clock, reset, regAData, stepper_x_out, servo_out, switches);
 	wire servo_var;
 	assign servo_out = servo_var;
 	move_one_step move_one_step(.clock_in(clock), .out(test));
+
+	wire stepOutput;
+
+	wire en;
+	assign en = 1;
+
+	wire[31:0] step_x_dir, step_y_dir, step_x_speed, step_y_speed;
+
+	stepper_controller stepper_controller (.en(en),.clk(clockIn), .numOfSteps (32'd5), .cyclesBetweenSteps(32'd1000), .stepOutput (stepOutput));
 	
     wire [31:0] duty_cycle;
     assign duty_cycle = switches ? 32'd100000 : 32'd200000 ;
@@ -80,6 +89,7 @@ module Wrapper (clock, reset, regAData, stepper_x_out, servo_out, switches);
 		.ctrl_writeEnable(rwe), .ctrl_reset(reset), 
 		.ctrl_writeReg(rd),
 		.ctrl_readRegA(rs1), .ctrl_readRegB(rs2), 
+		.step_x_dir(step_x_dir), .step_y_dir(step_y_dir), .step_x_speed(step_x_speed), .step_y_speed(step_y_speed),
 		.data_writeReg(rData), .data_readRegA(regA), .data_readRegB(regB));
 						
 	// Processor Memory (RAM)
