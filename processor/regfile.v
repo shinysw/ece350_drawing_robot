@@ -1,10 +1,18 @@
-module regfile (clock, ctrl_writeEnable, ctrl_reset, ctrl_writeReg, ctrl_readRegA, ctrl_readRegB, data_writeReg, data_readRegA, data_readRegB);
+module regfile (clock, ctrl_writeEnable, ctrl_reset, ctrl_writeReg, ctrl_readRegA, ctrl_readRegB, data_writeReg, data_readRegA, data_readRegB, step_x_dir, step_y_dir, step_x_speed, step_y_speed);
 
 	input clock, ctrl_writeEnable, ctrl_reset;
 	input [4:0] ctrl_writeReg, ctrl_readRegA, ctrl_readRegB;
 	input [31:0] data_writeReg;
 
 	output [31:0] data_readRegA, data_readRegB;
+	output [31:0] step_x_dir, step_y_dir, step_x_speed, step_y_speed;
+
+
+	assign step_x_dir = reg19_read;
+	assign step_y_dir = reg20_read;
+	assign step_x_speed = reg21_read;
+	assign step_y_speed = reg22_read;
+
 
 	wire [31:0] reg0_read, reg1_read, reg2_read, reg3_read, reg4_read, reg5_read, reg6_read, reg7_read, reg8_read, reg9_read, reg10_read, reg11_read, reg12_read, reg13_read, reg14_read, reg15_read, reg16_read, reg17_read, reg18_read, reg19_read, reg20_read, reg21_read, reg22_read, reg23_read, reg24_read, reg25_read, reg26_read, reg27_read, reg28_read, reg29_read, reg30_read, reg31_read;
 

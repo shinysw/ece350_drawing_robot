@@ -1,4 +1,5 @@
 module stepper_controller (
+    input wire en,
     input wire clk,               
     input wire [31:0] numOfSteps, 
     input wire [31:0] cyclesBetweenSteps, 
@@ -22,26 +23,40 @@ reg done;
 
 initial done = 0;
 initial clockCounter = 0;
+initial stepCounter = 0;
 
-initial stepCounter = clockCyclesPerStep + 1;
+initial pulseCounter = clockCyclesPerStep + 1;
 initial stepOutput = 0;
 
 
+always @(posedge en) begin
+     done = 0;
+     clockCounter = 0;
+     stepCounter = 0;
+     pulseCounter = clockCyclesPerStep + 1;
+     stepOutput = 0;
+end
+
 always @(posedge clk) begin
-
-    if (clockCounter % cyclesBetweenSteps == 0) begin
-        stepCounter <= 28'd0;
-        //clock_out <= (counter< DIVISOR / 2) ? 1'b1 : 1'b0;
+    if (en) begin
+        if (clockCounter % cyclesBetweenSteps == 0) begin
+            pulseCounter <= 28'd0;
+            //clock_out <= (counter< DIVISOR / 2) ? 1'b1 : 1'b0;
+        end
+        if (pulseCounter < clockCyclesPerStep && stepCounter <= numOfSteps) begin
+            pulseCounter <= pulseCounter + 28'd1;
+            stepOutput <= 1;
+        end
+        else if (pulseCounter == clockCyclesPerStep) begin
+            stepCounter <= stepCounter + 28'd1;
+            pulseCounter <= pulseCounter + 28'd1;
+            stepOutput <= 0;
+        end
+        else begin 
+            stepOutput <= 0;
+        end
+        clockCounter = clockCounter + 28'd1;
     end
-    if (stepCounter < clockCyclesPerStep) begin
-        stepCounter <= stepCounter + 28'd1;
-        stepOutput <= 1;
-    end
-    else begin
-        stepOutput <= 0;
-    end
-    clockCounter = clockCounter + 28'd1;
-
 end
 
 endmodule
