@@ -354,12 +354,12 @@ falling_register_5 reg_exe_rd(clock, reg_x_m_w_en, reset, exe_rd_inter, mem_rd);
 // CUSTOM COMMAND exe_opcode
 // OPCODE FOR PRESET COMMANDS 11101
 wire stall_out, stall_counter_reset;
-assign stall_out = exe_opcode == 5'b11101 ? 1'b1 : 1'b0;
 
 wire[27:0] stall_time;
-assign stall_time = 27'd2839123; // ARBITRARY FOR NOW, WILL GET ACTUAL NUMBER LATER
+assign stall_time = 27'd50; // ARBITRARY FOR NOW, WILL GET ACTUAL NUMBER LATER
+assign stall_counter_reset = exe_opcode == 5'b11101;
 
-stalling stalling(clk, 1'b1, stall_time, stall_out);
+stalling stalling(clock, stall_counter_reset, stall_time, stall_out);
 
 /*****************************Memory*****************************/
 wire [31:0] write_pc;
@@ -482,18 +482,18 @@ wire stall_decode, stall_fetch, stall_execute, stall_memory;
 
 //Flushes the instructions in the fetch and decode pipeline whenever a branch/jump is taken
 // ADD THE PRESET STALL 
-assign stall_fetch = stall || is_jump || is_branch || exe_is_jr || (exe_is_bex & (alu_op_B != 0)) || stall_out;
-assign stall_decode = is_jump || is_branch || exe_is_jr || (exe_is_bex & (alu_op_B != 0)) || stall_out;
-assign stall_execute = 0 || stall_out;
-assign stall_memory = 0 || stall_out;
+assign stall_fetch = stall || is_jump || is_branch || exe_is_jr || (exe_is_bex & (alu_op_B != 0));
+assign stall_decode = is_jump || is_branch || exe_is_jr || (exe_is_bex & (alu_op_B != 0));
+assign stall_execute = 0;
+assign stall_memory = 0;
 
 //Stalls all the intermediate pipeline registers 
-assign reg_pc_w_en = !(is_div && !div_ready);
-assign reg_f_d_w_en = !(stall || (is_div && !div_ready));
-assign reg_d_x_w_en = !(is_div && !div_ready);
-assign reg_x_m_w_en = !(is_div && !div_ready);
-assign reg_m_w_w_en = !(is_div && !div_ready);
-assign temp_mem_en = !(is_div && !div_ready);
+assign reg_pc_w_en = !(is_div && !div_ready) && !stall_out;
+assign reg_f_d_w_en = !(stall || (is_div && !div_ready)) && !stall_out;
+assign reg_d_x_w_en = !(is_div && !div_ready) && !stall_out;
+assign reg_x_m_w_en = !(is_div && !div_ready) && !stall_out;
+assign reg_m_w_w_en = !(is_div && !div_ready) && !stall_out;
+assign temp_mem_en = !(is_div && !div_ready) && !stall_out;
 
 wire [31:0] address_branch_t, addresss_branch_jr;
 
@@ -517,12 +517,11 @@ module stalling(clk, start, stalltime, out);
     input[27:0] stalltime;
     output out;
      // MULTIPLY SECONDS BY 10^8 need 27 bits
-    wire rst, outtemp;
-    assign rst = count == stalltime ? 1'b1: 1'b0;
-    
-    assign out = count == stalltime ? 1'b1 : 1'b0;
     
     wire[27:0] count;
-    counter_27 counter_27(clk, rst, count);
-
+    wire starttemp, starttemp2, boof;
+    dffe_ref delayed_mult(starttemp, start, clk, 1'b1, boof);
+    assign starttemp2 = start == 1'b1 && starttemp == 1'b0;
+    counter_27 counter_27(clk, starttemp2, stalltime, count);
+    assign out = count > 27'd0 && start? 1'b1 : 1'b0;
 endmodule

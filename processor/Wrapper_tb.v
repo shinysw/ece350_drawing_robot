@@ -33,10 +33,10 @@
  *
  **/
 
-module Wrapper_tb #(parameter FILE = "stalltest.mem");
+module Wrapper_tb #(parameter FILE = "stalltest");
 
 	// FileData
-	localparam DIR = "Test Files/";
+	localparam DIR = "processor/Test Files/";
 	localparam MEM_DIR = "Memory Files/";
 	localparam OUT_DIR = "Output Files/";
 	localparam VERIF_DIR = "Verification Files/";
@@ -158,8 +158,8 @@ module Wrapper_tb #(parameter FILE = "stalltest.mem");
 		end
 
 		// Output file name
-		$dumpfile({DIR, OUT_DIR, "test1", ".vcd"});
-		//$dumpfile({DIR, OUT_DIR, FILE, ".vcd"});
+		//$dumpfile({DIR, OUT_DIR, "test1", ".vcd"});
+		$dumpfile({DIR, OUT_DIR, FILE, ".vcd"});
 		// Module to capture and what level, 0 means all wires
 		$dumpvars(0, Wrapper_tb);
 

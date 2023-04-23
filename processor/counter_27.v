@@ -1,8 +1,21 @@
-module counter_27(clk, reset, out);
+module counter_27(clk, reset, stalltime, out);
 
     input clk, reset;
-    output[27:0] out;
+    input [27:0] stalltime;
+    output [27:0] out;
 
+    reg [27:0] outtemp;
+    initial begin
+        outtemp = stalltime;
+    end 
+
+    always @(posedge clk) begin
+        outtemp <= reset ? stalltime : outtemp - 27'd1;
+
+    end
+    assign out = outtemp;
+
+    /*
     wire q0, q1, q2, q3, q4, q5, q6, q7, q8, q9, q10, q11, q12, q13, q14, q15, q16, q17, q18, q19, q20, q21, q22, q23, q24, q25, q26, q27;
 
     
@@ -65,5 +78,5 @@ module counter_27(clk, reset, out);
     assign out[27] = !q27;
 
 
-
+    */
 endmodule
