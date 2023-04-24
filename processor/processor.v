@@ -39,12 +39,16 @@ ctrl_readRegA, // O: Register to read from port A of RegFile
 ctrl_readRegB, // O: Register to read from port B of RegFile
 data_writeReg, // O: Data to write to for RegFile
 data_readRegA, // I: Data from port A of RegFile
-data_readRegB // I: Data from port B of RegFile
+data_readRegB, // I: Data from port B of RegFile
+
+// Presets
+pre
 
 );
 
 // Control signals
 input clock, reset;
+input[2:0] pre;
 
 // Imem
 output [31:0] address_imem;
@@ -84,7 +88,20 @@ falling_register reg_f_d(clock, reg_f_d_w_en, reset, reg_f_d_out_inter, reg_f_d_
 wire [31:0] reg_f_d_out, reg_d_x_out, reg_x_m_out, reg_m_w_out;
 
 wire [31:0] reg_f_d_out_inter;
-assign reg_f_d_out_inter = stall_fetch ? 32'b0 : q_imem;
+wire square, triangle, star, square_out, triangle_out, star_out, controller_reset;
+assign square = pre[2];
+assign traingle = pre[1];
+assign star = pre[0];
+
+assign controller_reset = reset || (square == 1'b0 && triangle == 1'b0 && star == 1'b0);
+preset_controller preset_controller(clock, controller_reset, pre, square_out, triangle_out, star_out);
+
+wire[31:0] add1tosquare, add1totriangle, add1tostar;
+
+assign add1tosquare = 32'b00101010000000000000000000000001;
+assign add1totriangle = 32'b00101010010000000000000000000001;
+assign add1tostar = 32'b00101010100000000000000000000001;
+assign reg_f_d_out_inter = stall_fetch ? square_out ? add1tosquare : triangle_out ? add1totriangle : star_out ? add1tostar : 32'b0 : q_imem;
 
 
 /*****************************Decode*****************************/
@@ -482,7 +499,7 @@ wire stall_decode, stall_fetch, stall_execute, stall_memory;
 
 //Flushes the instructions in the fetch and decode pipeline whenever a branch/jump is taken
 // ADD THE PRESET STALL 
-assign stall_fetch = stall || is_jump || is_branch || exe_is_jr || (exe_is_bex & (alu_op_B != 0));
+assign stall_fetch = stall || is_jump || is_branch || exe_is_jr || (exe_is_bex & (alu_op_B != 0)) || square_out || triangle_out || star_out;
 assign stall_decode = is_jump || is_branch || exe_is_jr || (exe_is_bex & (alu_op_B != 0));
 assign stall_execute = 0;
 assign stall_memory = 0;
@@ -525,3 +542,4 @@ module stalling(clk, start, stalltime, out);
     counter_27 counter_27(clk, starttemp2, stalltime, count);
     assign out = count > 27'd0 && start? 1'b1 : 1'b0;
 endmodule
+

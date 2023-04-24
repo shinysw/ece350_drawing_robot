@@ -24,20 +24,21 @@
  *
  **/
 
-module Wrapper (clock, reset, regAData, stepper_x_out, stepper_y_out, stepper_x_dir, stepper_y_dir, servo_out, switches, btnL, btnR, btnD, btnU);
+module Wrapper (clock, reset, regAData, stepper_x_out, stepper_y_out, stepper_x_dir, stepper_y_dir, servo_out, switches, btnL, btnR, btnD, btnU, square_in, triange_in, star_in);
 
-	input clock, reset, switches, btnL, btnR, btnD, btnU;
+	input clock, reset, switches, btnL, btnR, btnD, btnU, square_in, triangle_in, star_in;
 
 	output [15:0] regAData;
 	output stepper_x_out, stepper_y_out, stepper_x_dir, stepper_y_dir, servo_out;
 
-	wire[31:0] step_x_dir, step_y_dir, step_x_speed, step_y_speed;
+	wire[31:0] step_x_dir, step_y_dir, step_x_speed, step_y_speed, square, triangle, star;
 
 	assign stepper_x_out = (btnL || btnR) ? def_x :  step_x_speed;
 	assign stepper_y_out = (btnU || btnD) ? def_y : step_y_speed; 
 	
-	
-
+	assign square = square_in ? 32'd1 : 32'd0;
+	assign triangle = triange_in ? 32'd1 : 32'd0;
+	assign star = star_in ? 32'd1 : 32'd0;
 	assign stepper_x_dir = (btnL) ? 0 : 1;
 	assign stepper_y_dir = (btnU) ? 0 : 1;
 
@@ -49,7 +50,7 @@ module Wrapper (clock, reset, regAData, stepper_x_out, stepper_y_out, stepper_x_
 
 	wire en;
 	assign en = 1;
-
+     
 	stepper_controller stepper_controller (.en(en),.clk(clockIn), .numOfSteps (32'd5), .cyclesBetweenSteps(32'd1000), .stepOutput (stepOutput));
 
 	//Servo Stuff
@@ -72,6 +73,13 @@ module Wrapper (clock, reset, regAData, stepper_x_out, stepper_y_out, stepper_x_
 	//localparam INSTR_FILE = "";
 	localparam INSTR_FILE = "C:/Users/shiny/Desktop/ShinySw/School/ECE350/processor/processor/Test Files/Memory Files/test32";
 	
+	wire controller_reset;
+	wire[2:0] presets;
+	assign presets[2] = square_in;
+	assign presets[1] = triangle_in;
+	assign presets[0] = star_in;
+
+
 	// Main Processing Unit
 	processor CPU(.clock(clock), .reset(reset), 
 								
@@ -79,13 +87,13 @@ module Wrapper (clock, reset, regAData, stepper_x_out, stepper_y_out, stepper_x_
 		.address_imem(instAddr), .q_imem(instData),
 									
 		// Regfile
-		.ctrl_writeEnable(rwe),     .ctrl_writeReg(rd),
+		.ctrl_writeEnable (rwe),     .ctrl_writeReg(rd),
 		.ctrl_readRegA(rs1),     .ctrl_readRegB(rs2), 
 		.data_writeReg(rData), .data_readRegA(regA), .data_readRegB(regB),
 									
 		// RAM
 		.wren(mwe), .address_dmem(memAddr), 
-		.data(memDataIn), .q_dmem(memDataOut)); 
+		.data(memDataIn), .q_dmem(memDataOut), .pre(presets)); 
 	
 	// Instruction Memory (ROM)
 	ROM #(.MEMFILE({INSTR_FILE, ".mem"}))
@@ -99,7 +107,7 @@ module Wrapper (clock, reset, regAData, stepper_x_out, stepper_y_out, stepper_x_
 		.ctrl_writeReg(rd),
 		.ctrl_readRegA(rs1), .ctrl_readRegB(rs2), 
 		.step_x_dir(step_x_dir), .step_y_dir(step_y_dir), .step_x_speed(step_x_speed), .step_y_speed(step_y_speed),
-		.data_writeReg(rData), .data_readRegA(regA), .data_readRegB(regB));
+		.data_writeReg(rData), .data_readRegA(regA), .data_readRegB(regB), .square(square), .triangle(triangle), .star(star));
 						
 	// Processor Memory (RAM)
 	RAM ProcMem(.clk(clock), 

@@ -1,8 +1,8 @@
-module regfile (clock, ctrl_writeEnable, ctrl_reset, ctrl_writeReg, ctrl_readRegA, ctrl_readRegB, data_writeReg, data_readRegA, data_readRegB, step_x_dir, step_y_dir, step_x_speed, step_y_speed);
+module regfile (clock, ctrl_writeEnable, ctrl_reset, ctrl_writeReg, ctrl_readRegA, ctrl_readRegB, data_writeReg, data_readRegA, data_readRegB, step_x_dir, step_y_dir, step_x_speed, step_y_speed, square, triangle, star);
 
 	input clock, ctrl_writeEnable, ctrl_reset;
 	input [4:0] ctrl_writeReg, ctrl_readRegA, ctrl_readRegB;
-	input [31:0] data_writeReg;
+	input [31:0] data_writeReg, star, triangle, square;
 
 	output [31:0] data_readRegA, data_readRegB;
 	output [31:0] step_x_dir, step_y_dir, step_x_speed, step_y_speed;
