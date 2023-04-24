@@ -30,6 +30,7 @@ initial stepOutput = 0;
 
 
 always @(posedge en) begin
+    //Resets everything on enable
      done = 0;
      clockCounter = 0;
      stepCounter = 0;

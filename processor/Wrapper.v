@@ -24,40 +24,49 @@
  *
  **/
 
-module Wrapper (clock, reset, regAData, stepper_x_out, servo_out, switches);
-	input clock, reset, switches;
+module Wrapper (clock, reset, regAData, stepper_x_out, stepper_y_out, stepper_x_dir, stepper_y_dir, servo_out, switches, btnL, btnR, btnD, btnU);
+
+	input clock, reset, switches, btnL, btnR, btnD, btnU;
 
 	output [15:0] regAData;
-	output stepper_x_out, servo_out;
-	
-	wire test;
-	assign stepper_x_out = test;
+	output stepper_x_out, stepper_y_out, stepper_x_dir, stepper_y_dir, servo_out;
 
-	wire servo_var;
-	assign servo_out = servo_var;
-	move_one_step move_one_step(.clock_in(clock), .out(test));
+	wire[31:0] step_x_dir, step_y_dir, step_x_speed, step_y_speed;
+
+	assign stepper_x_out = (btnL || btnR) ? def_x :  step_x_speed;
+	assign stepper_y_out = (btnU || btnD) ? def_y : step_y_speed; 
+	
+	
+
+	assign stepper_x_dir = (btnL) ? 0 : 1;
+	assign stepper_y_dir = (btnU) ? 0 : 1;
+
+	wire def_x, def_y;
+	move_one_step move_one_step_x(.clock_in(clock), .out(def_x));
+	move_one_step move_one_step_y(.clock_in(clock), .out(def_y));
 
 	wire stepOutput;
 
 	wire en;
 	assign en = 1;
 
-	wire[31:0] step_x_dir, step_y_dir, step_x_speed, step_y_speed;
-
 	stepper_controller stepper_controller (.en(en),.clk(clockIn), .numOfSteps (32'd5), .cyclesBetweenSteps(32'd1000), .stepOutput (stepOutput));
-	
+
+	//Servo Stuff
     wire [31:0] duty_cycle;
-    assign duty_cycle = switches ? 32'd100000 : 32'd200000 ;
+    //Allows servo to be controlled by switch wow
+    assign duty_cycle = switches ? 32'd100000 : 32'd200000;
 
-	servo servo( .clock_in(clock), .out(servo_var), .duty(duty_cycle) );
-
+    //Outputs pwm for servo
+	wire servo_var;
+	assign servo_out = servo_var;
+	servo servo( .clock_in(clock), .out(servo_var), .duty(duty_cycle));
 
 	wire rwe, mwe;
 	wire[4:0] rd, rs1, rs2;
 	wire[31:0] instAddr, instData, 
 		rData, regA, regB,
 		memAddr, memDataIn, memDataOut;
-
 
 	// ADD YOUR MEMORY FILE HERE
 	//localparam INSTR_FILE = "";
