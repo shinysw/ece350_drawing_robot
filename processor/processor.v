@@ -90,17 +90,21 @@ falling_register reg_f_d(clock, reg_f_d_w_en, reset, reg_f_d_out_inter, reg_f_d_
 wire [31:0] reg_f_d_out, reg_d_x_out, reg_x_m_out, reg_m_w_out;
 
 wire [31:0] reg_f_d_out_inter;
+
+//Need to change 
 wire square, triangle, star, square_out, triangle_out, star_out, controller_reset;
 assign square = pre[2];
 assign traingle = pre[1];
 assign star = pre[0];
 
+//Resets stuff 
 assign controller_reset = reset || (square == 1'b0 && triangle == 1'b0 && star == 1'b0);
 
 preset_controller preset_controller(clock, controller_reset, pre, square_out, triangle_out, star_out);
 
 wire[31:0] add1tosquare, add1totriangle, add1tostar;
 
+//Instructions to actually insert stuff (addi to specific register to check whether or not to draw shape)
 assign add1tosquare = 32'b00101010000000000000000000000001;
 assign add1totriangle = 32'b00101010010000000000000000000001;
 assign add1tostar = 32'b00101010100000000000000000000001;
@@ -134,6 +138,8 @@ wire dec_is_blt = (dec_opcode == 5'b00110);
 wire dec_is_bex = (dec_opcode == 5'b10110);
 wire dec_is_setx = (dec_opcode == 5'b10101);
 
+wire dec_is_stall = (dec_opcode == 5'b11110);
+
 //ALU opcode constants
 wire [4:0] add_OP, sub_OP, and_OP, or_OP, sll_OP, sra_OP;
 assign add_OP = 5'b00000;
@@ -147,7 +153,6 @@ wire dec_write_en = (dec_is_alu || dec_is_addi || dec_is_lw || dec_is_jal) || (d
 
 //Determines if instruction is a branch     
 wire dec_is_branch = dec_is_bne || dec_is_blt;
-
 
 //Determines what $rs to read
 //For branch instructions $rd is read from instead of $rs to compare
@@ -164,6 +169,11 @@ assign ctrl_readRegB = dec_is_sw ? dec_rd_parse : dec_branch_B_status;
 assign dec_branch_B_status = (dec_is_bex || dec_is_setx) ? 5'd30 : dec_jr_B;
 assign dec_jr_B = dec_is_jr ? dec_rd_parse : dec_branch_B;
 assign dec_branch_B = dec_is_branch ? dec_rs_parse : dec_rt_parse;
+
+
+// wire [31:0] stall_time_decode;
+
+
 
 //Determines the destination register number. Defaults to $rd except for $r30 and $r31 exceptions
 wire [4:0] dec_rd, dec_exp;
@@ -218,6 +228,7 @@ wire reg_d_x_w_en;
 wire [31:0] reg_d_x_out_inter;
 assign reg_d_x_out_inter = stall_decode ? 32'b0 : reg_f_d_out;
 
+
 falling_register reg_d_x(clock, reg_d_x_w_en, reset, reg_d_x_out_inter, reg_d_x_out);
 
 /*****************************Execute*****************************/
@@ -250,6 +261,9 @@ wire exe_is_bex = (exe_opcode == 5'b10110);
 wire exe_is_setx = (exe_opcode == 5'b10101);
 
 
+wire exe_is_stall = (exe_opcode == 5'b11110);
+
+
 //Pad bits for JI target
 wire [31:0] exe_ji_t = {5'b0, reg_d_x_out[26:0]};
 
@@ -265,6 +279,8 @@ assign alu_op = reg_d_x_out[6:2];
 //Selects either addi or normal alu operation
 wire is00000opcode;
 assign is00000opcode = exe_opcode == 0;
+
+
 
 wire [31:0] ALU_out;
 wire alu_lessThan, alu_notEqual, alu_overFlow, nan;
@@ -319,7 +335,7 @@ wire [31:0] alu_op_B_res;
 
 //Selects between the sign extended and data from reg B for certain instructions
 wire alu_is_branch = (exe_opcode == 5'b00010) || (exe_opcode == 5'b00110);
-assign alu_op_B_res = (is00000opcode || alu_is_branch) ? alu_op_B : d_x_S_out;
+assign alu_op_B_res = (is00000opcode || alu_is_branch || exe_is_stall) ? alu_op_B : d_x_S_out;
 wire [4:0] alu_act_op, alu_is_addi;
 
 //Selects the correct opcode depending on the instruction
@@ -472,9 +488,11 @@ assign data_writeReg = write_is_setx ? mem_ji_t_out : data_write_jal;
 // OPCODE FOR PRESET COMMANDS 11101
 wire stall_out, stall_counter_reset;
 
-wire[27:0] stall_time;
-assign stall_time = 27'd10; // ARBITRARY FOR NOW, WILL GET ACTUAL NUMBER LATER
+// wire[27:0] stall_time;
+// assign stall_time = 27'd100000000; // ARBITRARY FOR NOW, WILL GET ACTUAL NUMBER LATER
 assign stall_counter_reset = write_opcode == 5'b11110;
+
+wire [27:0] stall_time = {1'b0, reg_m_w_out[26:0]};
 
 stalling stalling(clock, stall_counter_reset, stall_time, stall_out);
 
@@ -549,7 +567,7 @@ module stalling(clk, start, stalltime, out);
     assign out = count > 27'd0 && start? 1'b1 : 1'b0;
 endmodule
 
-
+//
 module preset_controller(clk, reset, presets, square_out, triangle_out, star_out);
     input clk, reset;
     input[2:0] presets;
@@ -561,6 +579,7 @@ module preset_controller(clk, reset, presets, square_out, triangle_out, star_out
     assign triangle = presets[1];
     assign star = presets[0];
 
+    //Single pulse 
     dffe_ref_fall squaredff(square_t, square, clk, 1'b1, boof);
     dffe_ref_fall triangledff(triangle_t, triangle, clk, 1'b1, boof1);
     dffe_ref_fall stardff(star_t, star, clk, 1'b1, boof2);

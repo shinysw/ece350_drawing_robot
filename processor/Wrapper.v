@@ -24,28 +24,49 @@
  *
  **/
 
-module Wrapper (clock, reset, regAData, stepper_x_out, stepper_y_out, stepper_x_dir, stepper_y_dir, servo_out, switches, btnL, btnR, btnD, btnU, square_in, triange_in, star_in);
+module Wrapper (clock, reset, regAData, stepper_x_out, stepper_y_out, stepper_x_dir, stepper_y_dir, control_sel, servo_out, switches, btnL, btnR, btnD, btnU, square_in, triangle_in, star_in);
 
-	input clock, reset, switches, btnL, btnR, btnD, btnU, square_in, triangle_in, star_in;
-
+	input clock, reset, switches, control_sel, btnL, btnR, btnD, btnU, square_in, triangle_in, star_in;
+	
 	output [15:0] regAData;
 	output stepper_x_out, stepper_y_out, stepper_x_dir, stepper_y_dir, servo_out;
 
-	wire[31:0] step_x_dir, step_y_dir, step_x_speed, step_y_speed, square, triangle, star;
+	wire[31:0] step_x_dir, step_y_dir, step_x_speed, step_y_speed, servo_duty_cycle, square, triangle, star;
 
-	assign stepper_x_out = (btnL || btnR) ? def_x :  step_x_speed;
-	assign stepper_y_out = (btnU || btnD) ? def_y : step_y_speed; 
+	//Switches control of stepper between manual vs. programmed memory
+	assign stepper_x_out = control_sel ? button_stepper_x : prog_x;
+	assign stepper_y_out = control_sel ? button_stepper_y : prog_y;
+
+	//Button stepper control for speed
+	wire button_stepper_x, button_stepper_y;
+	assign button_stepper_x = (btnL || btnR) ? def_x : 0;
+	assign button_stepper_y = (btnU || btnD) ? def_y : 0; 
 	
+	//Switches control of stepper between selected vs. programmed memory
+	assign stepper_x_dir = control_sel ? button_x_dir : step_x_dir[0];
+	assign stepper_y_dir = control_sel ? button_y_dir : step_y_dir[0];
+
+	//Button stepper control for directionf
+	wire button_x_dir, button_y_dir;
+	assign button_x_dir = (btnL || btnR) ? (btnL ? 1 : 0) : 0;
+	assign button_y_dir = (btnU || btnD) ? (btnU ? 1 : 0) : 0;
+
 	assign square = square_in ? 32'd1 : 32'd0;
-	assign triangle = triange_in ? 32'd1 : 32'd0;
+	assign triangle = triangle_in ? 32'd1 : 32'd0;
 	assign star = star_in ? 32'd1 : 32'd0;
-	assign stepper_x_dir = (btnL) ? 0 : 1;
-	assign stepper_y_dir = (btnU) ? 0 : 1;
 
 	wire def_x, def_y;
-	move_one_step move_one_step_x(.clock_in(clock), .out(def_x));
-	move_one_step move_one_step_y(.clock_in(clock), .out(def_y));
+	move_one_step move_one_step_x(.clock_in(clock), .speed(31'd20000), .out(def_x));
+	move_one_step move_one_step_y(.clock_in(clock), .speed(31'd20000), .out(def_y));
+	
+	wire mem_x, mem_y, prog_x, prog_y;
+	move_one_step move_one_step_x_prog(.clock_in(clock), .speed(step_x_speed), .out(prog_x));
+	move_one_step move_one_step_y_prog(.clock_in(clock), .speed(step_y_speed), .out(prog_y));
+	
+    // assign mem_x = step_x_speed[0] ? prog_x : 1'b0;
+    // assign mem_y = step_y_speed[0] ? prog_y : 1'b0;
 
+    // wire mem_x_dir, mem_y_dir, prog_x, prog_y;
 	wire stepOutput;
 
 	wire en;
@@ -54,9 +75,12 @@ module Wrapper (clock, reset, regAData, stepper_x_out, stepper_y_out, stepper_x_
 	stepper_controller stepper_controller (.en(en),.clk(clockIn), .numOfSteps (32'd5), .cyclesBetweenSteps(32'd1000), .stepOutput (stepOutput));
 
 	//Servo Stuff
-    wire [31:0] duty_cycle;
+    wire [31:0] manual_duty_cycle, program_duty_cycle;
     //Allows servo to be controlled by switch wow
-    assign duty_cycle = switches ? 32'd100000 : 32'd200000;
+    assign manual_duty_cycle = switches ? 32'd100000 : 32'd200000;
+    assign program_duty_cycle = servo_duty_cycle * 1000 + 100000;
+
+    assign duty_cycle = control_sel ? manual_duty_cycle : program_duty_cycle;
 
     //Outputs pwm for servo
 	wire servo_var;
@@ -71,14 +95,13 @@ module Wrapper (clock, reset, regAData, stepper_x_out, stepper_y_out, stepper_x_
 
 	// ADD YOUR MEMORY FILE HERE
 	//localparam INSTR_FILE = "";
-	localparam INSTR_FILE = "C:/Users/shiny/Desktop/ShinySw/School/ECE350/processor/processor/Test Files/Memory Files/test32";
+	localparam INSTR_FILE = "C:/Users/shiny/Desktop/ShinySw/School/ECE350/processor/processor/Test Files/Memory Files/presets";
 	
 	wire controller_reset;
 	wire[2:0] presets;
 	assign presets[2] = square_in;
 	assign presets[1] = triangle_in;
 	assign presets[0] = star_in;
-
 
 	// Main Processing Unit
 	processor CPU(.clock(clock), .reset(reset), 
@@ -106,7 +129,7 @@ module Wrapper (clock, reset, regAData, stepper_x_out, stepper_y_out, stepper_x_
 		.ctrl_writeEnable(rwe), .ctrl_reset(reset), 
 		.ctrl_writeReg(rd),
 		.ctrl_readRegA(rs1), .ctrl_readRegB(rs2), 
-		.step_x_dir(step_x_dir), .step_y_dir(step_y_dir), .step_x_speed(step_x_speed), .step_y_speed(step_y_speed),
+		.step_x_dir(step_x_dir), .step_y_dir(step_y_dir), .step_x_speed(step_x_speed), .step_y_speed(step_y_speed), .servo_duty_cycle(servo_duty_cycle),
 		.data_writeReg(rData), .data_readRegA(regA), .data_readRegB(regB), .square(square), .triangle(triangle), .star(star));
 						
 	// Processor Memory (RAM)

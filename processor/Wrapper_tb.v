@@ -36,11 +36,11 @@
 module Wrapper_tb #(parameter FILE = "presets");
 
 	// FileData
-	localparam DIR = "processor/Test Files/";
+	localparam DIR = "Test Files/";
 	localparam MEM_DIR = "Memory Files/";
 	localparam OUT_DIR = "Output Files/";
 	localparam VERIF_DIR = "Verification Files/";
-	localparam DEFAULT_CYCLES = 255;
+	localparam DEFAULT_CYCLES = 10000;
 
 	// Inputs to the processor
 	//reg clock = 0, clockIn = 0, reset = 0;
