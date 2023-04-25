@@ -95,10 +95,15 @@ module Wrapper_tb #(parameter FILE = "presets");
 	//clock_divider clock_divider (.CLK100MHZ(clockIn), .CLK_OUT(clock), .N(32'd5));
 
 	wire[31:0] step_x_dir, step_y_dir, step_x_speed, step_y_speed;
-	wire[2:0] pre;
-	assign pre[2] = 1'b1;
-	assign pre[1] = 1'b0;
-	assign pre[0] = 1'b0;
+	reg[2:0] pre;
+	initial pre[2] = 1'b0;
+	initial pre[1] = 1'b0;
+	initial pre[0] = 1'b0;
+	always begin
+		#300 pre[2] = ~pre[2];
+		#500 pre[1] = 1'b0;
+		#500 pre[0] = 1'b0;
+	end
 	// Main Processing Unit
 	processor CPU(.clock(clock), .reset(reset), 
 								
