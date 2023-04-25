@@ -1,12 +1,8 @@
-Cycle  61: Wrote 6 into register 3
-Cycle  62: Wrote 6 into register 3
-Cycle  63: Wrote 6 into register 3
-Cycle  64: Wrote 6 into register 3
 ============== Testing Mode ==============
 Reg  0:           0
 Reg  1:           0
 Reg  2:           0
-Reg  3:           6
+Reg  3:           0
 Reg  4:           0
 Reg  5:           0
 Reg  6:           0

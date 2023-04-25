@@ -33,7 +33,7 @@
  *
  **/
 
-module Wrapper_tb #(parameter FILE = "stalltest");
+module Wrapper_tb #(parameter FILE = "presets");
 
 	// FileData
 	localparam DIR = "processor/Test Files/";
@@ -95,7 +95,10 @@ module Wrapper_tb #(parameter FILE = "stalltest");
 	//clock_divider clock_divider (.CLK100MHZ(clockIn), .CLK_OUT(clock), .N(32'd5));
 
 	wire[31:0] step_x_dir, step_y_dir, step_x_speed, step_y_speed;
-
+	wire[2:0] pre;
+	assign pre[2] = 1'b1;
+	assign pre[1] = 1'b0;
+	assign pre[0] = 1'b0;
 	// Main Processing Unit
 	processor CPU(.clock(clock), .reset(reset), 
 								
@@ -109,7 +112,7 @@ module Wrapper_tb #(parameter FILE = "stalltest");
 									
 		// RAM
 		.wren(mwe), .address_dmem(memAddr), 
-		.data(memDataIn), .q_dmem(memDataOut)); 
+		.data(memDataIn), .q_dmem(memDataOut), .pre(pre)); 
 	
 	// Instruction Memory (ROM)
 	ROM #(.MEMFILE({DIR, MEM_DIR, FILE, ".mem"}))

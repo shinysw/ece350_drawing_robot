@@ -71,7 +71,9 @@ wire [31:0] address_imem_new, address_imem_curr, address_imem_add;
 
 // + 1 adder for the PC
 wire pc_carry, pc_neq, pc_lt;
-cla_32_bit program_counter(address_imem, 32'b1, 1'b0, address_imem_add, pc_carry, pc_neq, pc_lt);
+wire[31:0] pc_add;
+assign pc_add = square_out || triangle_out || star_out ? 32'b0 : 32'b1;
+cla_32_bit program_counter(address_imem, pc_add, 1'b0, address_imem_add, pc_carry, pc_neq, pc_lt);
 
 wire reg_pc_w_en;
 //Program Counter PC
@@ -94,6 +96,7 @@ assign traingle = pre[1];
 assign star = pre[0];
 
 assign controller_reset = reset || (square == 1'b0 && triangle == 1'b0 && star == 1'b0);
+
 preset_controller preset_controller(clock, controller_reset, pre, square_out, triangle_out, star_out);
 
 wire[31:0] add1tosquare, add1totriangle, add1tostar;
@@ -101,7 +104,10 @@ wire[31:0] add1tosquare, add1totriangle, add1tostar;
 assign add1tosquare = 32'b00101010000000000000000000000001;
 assign add1totriangle = 32'b00101010010000000000000000000001;
 assign add1tostar = 32'b00101010100000000000000000000001;
-assign reg_f_d_out_inter = stall_fetch ? square_out ? add1tosquare : triangle_out ? add1totriangle : star_out ? add1tostar : 32'b0 : q_imem;
+
+wire all3;
+assign all3 = square_out || triangle_out || star_out ? 1'b1 : 1'b0;
+assign reg_f_d_out_inter = stall_fetch || all3 ? square_out ? add1tosquare : triangle_out ? add1totriangle : star_out ? add1tostar : 32'b0 : q_imem;
 
 
 /*****************************Decode*****************************/
@@ -368,16 +374,6 @@ falling_register_5 reg_exe_rt(clock, reg_x_m_w_en, reset, exe_rt_inter, mem_rt);
 falling_register_5 reg_exe_rd(clock, reg_x_m_w_en, reset, exe_rd_inter, mem_rd);
 
 
-// CUSTOM COMMAND exe_opcode
-// OPCODE FOR PRESET COMMANDS 11101
-wire stall_out, stall_counter_reset;
-
-wire[27:0] stall_time;
-assign stall_time = 27'd50; // ARBITRARY FOR NOW, WILL GET ACTUAL NUMBER LATER
-assign stall_counter_reset = exe_opcode == 5'b11101;
-
-stalling stalling(clock, stall_counter_reset, stall_time, stall_out);
-
 /*****************************Memory*****************************/
 wire [31:0] write_pc;
 falling_register write_reg_pc(clock, reg_m_w_w_en, reset, mem_pc, write_pc);
@@ -472,6 +468,16 @@ assign lw_data = write_is_lw ? reg_m_read_out : reg_m_alu_out;
 assign data_write_jal = write_is_jal ? write_pc : lw_data;
 assign data_writeReg = write_is_setx ? mem_ji_t_out : data_write_jal;
 
+// CUSTOM COMMAND exe_opcode
+// OPCODE FOR PRESET COMMANDS 11101
+wire stall_out, stall_counter_reset;
+
+wire[27:0] stall_time;
+assign stall_time = 27'd10; // ARBITRARY FOR NOW, WILL GET ACTUAL NUMBER LATER
+assign stall_counter_reset = write_opcode == 5'b11110;
+
+stalling stalling(clock, stall_counter_reset, stall_time, stall_out);
+
 /***********************Branch, Jump, PC, Hazard stuff******************/
 
 //Determines if there is a write hazard for any instruction that uses rs
@@ -543,3 +549,24 @@ module stalling(clk, start, stalltime, out);
     assign out = count > 27'd0 && start? 1'b1 : 1'b0;
 endmodule
 
+
+module preset_controller(clk, reset, presets, square_out, triangle_out, star_out);
+    input clk, reset;
+    input[2:0] presets;
+    output square_out, triangle_out, star_out;
+
+    wire square, square_t, triangle, triangle_t, star, star_t, boof, boof1, boof2, notclk;
+
+    assign square = presets[2];
+    assign triangle = presets[1];
+    assign star = presets[0];
+
+    dffe_ref_fall squaredff(square_t, square, clk, 1'b1, boof);
+    dffe_ref_fall triangledff(triangle_t, triangle, clk, 1'b1, boof1);
+    dffe_ref_fall stardff(star_t, star, clk, 1'b1, boof2);
+
+    assign square_out = square == 1'b1 && square_t == 1'b0 ? 1'b1 : 1'b0;
+    assign triangle_out = triangle == 1'b1 && triangle_t == 1'b0 ? 1'b1 : 1'b0;
+    assign star_out = star == 1'b1 && star_t == 1'b0 ? 1'b1 : 1'b0;
+
+endmodule

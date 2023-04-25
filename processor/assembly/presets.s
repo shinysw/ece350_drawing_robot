@@ -1,71 +1,93 @@
 .text
-
-
 addi $1, $0, 1
 j main2
+nop
+nop
+nop
+nop
+nop
+nop
+nop
 
 square:
-
-    addi $x, $0, 1
-    addi $xspeed, $0, 1
+    nop
+    nop
+    nop
+    nop
+    nop
+    addi $r19, $0, 1
+    addi $r21, $0, 1
     stall $0, $0, 10
 
-    addi $x, $0, -1
-    addi $xspeed, $0, -1
+    addi $r19, $0, -1
+    addi $r21, $0, -1
 
-    addi $y, $0, 1
-    addi $yspeed, $0, 1
+    addi $r20, $0, 1
+    addi $r22, $0, 1
     stall $0, $0, 10
 
-    addi $y, $0, -1
-    addi $yspeed, $0, -1
+    addi $r20, $0, -1
+    addi $r22, $0, -1
 
-    addi $x, $0, -1
-    addi $xspeed, $0, 1
+    addi $r19, $0, -1
+    addi $r21, $0, 1
     stall $0, $0, 10
 
-    addi $x, $0, 1
-    addi $xspeed, $0, -1
+    addi $r19, $0, 1
+    addi $r21, $0, -1
 
-    addi $y, $0, -1
-    addi $yspeed, $0, 1
+    addi $r20, $0, -1
+    addi $r22, $0, 1
     stall $0, $0, 10
-    addi $y, $0, 1
-    addi $yspeed, $0, -1
+    addi $r20, $0, 1
+    addi $r22, $0, -1
 
     # Reset the input
-    addi $square, $0, -1
+    addi $r8, $0, -1
     j		main2			# jump to main2
     
 triangle:
+    nop
+    nop
+    nop
+    nop
+    nop
     # first diagonal
-    addi $x, $0, 1
-    addi $y, $0, 1
-    addi $xspeed, $0, 1
-    addi $yspeed, $0, 1
+    addi $r19, $0, 1
+    addi $r20, $0, 1
+    addi $r21, $0, 1
+    addi $r22, $0, 1
 
     stall $0, $0, 10
     # Turn off first diagonal
-    addi $x, $0, -1
-    addi $xspeed, $0, -1
-    addi $y, $0, -1
-    addi $yspeed, $0, -1
+    addi $r19, $0, -1
+    addi $r21, $0, -1
+    addi $r20, $0, -1
+    addi $r22, $0, -1
 
     #second diagonal
 
 
-    addi $triangle, $0, -1
+    addi $r9, $0, -1
     j main2
 
 star: 
-
-
-    addi $star, $0, -1
+    nop
+    nop
+    nop
+    nop
+    nop
+    addi $r10, $0, -1
     j main2
 
 
 main2:
-    bne $square, $1, square
-    bne $triangle, $1, triangle
-    bne $star, $1, star
+    nop
+    nop
+    nop
+    nop
+    nop
+    bne $r8, $1, square
+    bne $r9, $1, triangle
+    bne $r10, $1, star
     j main2
