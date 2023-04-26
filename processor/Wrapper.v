@@ -85,7 +85,7 @@ module Wrapper (clock, reset, regAData, stepper_x_out, stepper_y_out, stepper_x_
     //Outputs pwm for servo
 	wire servo_var;
 	assign servo_out = servo_var;
-	servo servo( .clock_in(clock), .out(servo_var), .duty(duty_cycle));
+	servo servo(.clock_in(clock), .out(servo_var), .duty(duty_cycle));
 
 	wire rwe, mwe;
 	wire[4:0] rd, rs1, rs2;

@@ -28,14 +28,14 @@ square:
     addi $r20, $0, 0
     addi $r22, $0, 0
 
-    addi $r19, $0, -1
+    addi $r19, $0, 0
     addi $r21, $0, 1
     stall $0, $0, 10
 
     addi $r19, $0, 0
     addi $r21, $0, 0
 
-    addi $r20, $0, -1
+    addi $r20, $0, 0
     addi $r22, $0, 1
     stall $0, $0, 10
     addi $r20, $0, 0
