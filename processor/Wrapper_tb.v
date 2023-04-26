@@ -33,14 +33,14 @@
  *
  **/
 
-module Wrapper_tb #(parameter FILE = "presets");
+module Wrapper_tb #(parameter FILE = "presets_3");
 
 	// FileData
 	localparam DIR = "Test Files/";
 	localparam MEM_DIR = "Memory Files/";
 	localparam OUT_DIR = "Output Files/";
 	localparam VERIF_DIR = "Verification Files/";
-	localparam DEFAULT_CYCLES = 10000;
+	localparam DEFAULT_CYCLES = 5000;
 
 	// Inputs to the processor
 	//reg clock = 0, clockIn = 0, reset = 0;
@@ -90,11 +90,15 @@ module Wrapper_tb #(parameter FILE = "presets");
 	stepper_controller stepper_controller (.en(en),.clk(clockIn), .numOfSteps (32'd5), .cyclesBetweenSteps(32'd1000), .stepOutput (stepOutput));
 
 	wire test;
-	move_one_step move_one_step(.clock_in(clockIn), .out(test));
+	move_one_step move_one_step_x(.clock_in(clock), .speed(32'd2000), .out(def_x));
 
 	//clock_divider clock_divider (.CLK100MHZ(clockIn), .CLK_OUT(clock), .N(32'd5));
 
 	wire[31:0] step_x_dir, step_y_dir, step_x_speed, step_y_speed;
+
+	move_one_step move_one_step_x_prog(.clock_in(clock), .speed(step_x_speed), .out(prog_x));
+	move_one_step move_one_step_y_prog(.clock_in(clock), .speed(step_y_speed), .out(prog_y));
+	
 	reg[2:0] pre;
 	initial pre[2] = 1'b0;
 	initial pre[1] = 1'b0;
@@ -172,8 +176,8 @@ module Wrapper_tb #(parameter FILE = "presets");
 		end
 
 		// Output file name
-		//$dumpfile({DIR, OUT_DIR, "test1", ".vcd"});
-		$dumpfile({DIR, OUT_DIR, FILE, ".vcd"});
+		$dumpfile({DIR, OUT_DIR, "presets_2", ".vcd"});
+		//$dumpfile({DIR, OUT_DIR, FILE, ".vcd"});
 		// Module to capture and what level, 0 means all wires
 		$dumpvars(0, Wrapper_tb);
 
