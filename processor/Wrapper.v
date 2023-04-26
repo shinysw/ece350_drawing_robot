@@ -24,14 +24,14 @@
  *
  **/
 
-module Wrapper (clock, reset, regAData, stepper_x_out, stepper_y_out, stepper_x_dir, stepper_y_dir, servo_out, switches, btnL, btnR, btnD, btnU, square_in, triangle_in, star_in);
+module Wrapper (clock, reset, regAData, stepper_x_out, stepper_y_out, stepper_x_dir, stepper_y_dir, servo_out, switches, btnL, btnR, btnD, btnU, square_in, triangle_in, star_in, manual);
 
-	input clock, reset, switches, btnL, btnR, btnD, btnU, square_in, triangle_in, star_in;
+	input clock, reset, switches, btnL, btnR, btnD, btnU, square_in, triangle_in, star_in, manual;
 	
 	output [15:0] regAData;
 	output stepper_x_out, stepper_y_out, stepper_x_dir, stepper_y_dir, servo_out;
 
-	wire[31:0] step_x_dir, step_y_dir, step_x_speed, step_y_speed, square, triangle, star;
+	wire[31:0] step_x_dir, step_y_dir, step_x_speed, step_y_speed, square, triangle, star, reg25;
 
 	assign stepper_x_out = (btnL || btnR) ? def_x : mem_x;
 	assign stepper_y_out = (btnU || btnD) ? def_y : mem_y; 
@@ -68,7 +68,9 @@ module Wrapper (clock, reset, regAData, stepper_x_out, stepper_y_out, stepper_x_
 	//Servo Stuff
     wire [31:0] duty_cycle;
     //Allows servo to be controlled by switch wow
-    assign duty_cycle = switches ? 32'd100000 : 32'd200000;
+	wire notmanual;
+	assign notmanaual = ~manual;
+    assign duty_cycle = switches && manual || (reg25 == 32'b0 && notmanaual) ? 32'd100000 : 32'd200000;
 
     //Outputs pwm for servo
 	wire servo_var;
@@ -119,7 +121,7 @@ module Wrapper (clock, reset, regAData, stepper_x_out, stepper_y_out, stepper_x_
 		.ctrl_writeReg(rd),
 		.ctrl_readRegA(rs1), .ctrl_readRegB(rs2), 
 		.step_x_dir(step_x_dir), .step_y_dir(step_y_dir), .step_x_speed(step_x_speed), .step_y_speed(step_y_speed),
-		.data_writeReg(rData), .data_readRegA(regA), .data_readRegB(regB), .square(square), .triangle(triangle), .star(star));
+		.data_writeReg(rData), .data_readRegA(regA), .data_readRegB(regB), .square(square), .triangle(triangle), .star(star), data_read25(reg25));
 						
 	// Processor Memory (RAM)
 	RAM ProcMem(.clk(clock), 

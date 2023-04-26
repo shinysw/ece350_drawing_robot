@@ -1,10 +1,10 @@
-module regfile (clock, ctrl_writeEnable, ctrl_reset, ctrl_writeReg, ctrl_readRegA, ctrl_readRegB, data_writeReg, data_readRegA, data_readRegB, step_x_dir, step_y_dir, step_x_speed, step_y_speed, servo_duty_cycle, square, triangle, star);
+module regfile (clock, ctrl_writeEnable, ctrl_reset, ctrl_writeReg, ctrl_readRegA, ctrl_readRegB, data_writeReg, data_readRegA, data_readRegB, step_x_dir, step_y_dir, step_x_speed, step_y_speed, servo_duty_cycle, square, triangle, star, reg25);
 
 	input clock, ctrl_writeEnable, ctrl_reset;
 	input [4:0] ctrl_writeReg, ctrl_readRegA, ctrl_readRegB;
 	input [31:0] data_writeReg, star, triangle, square;
 
-	output [31:0] data_readRegA, data_readRegB;
+	output [31:0] data_readRegA, data_readRegB, reg25;
 	output [31:0] step_x_dir, step_y_dir, step_x_speed, step_y_speed, servo_duty_cycle;
 
 	assign step_x_dir = reg19_read;
@@ -84,7 +84,7 @@ module regfile (clock, ctrl_writeEnable, ctrl_reset, ctrl_writeReg, ctrl_readReg
 	register reg22(clock, we_22, ctrl_reset, data_writeReg, reg22_read);
 	register reg23(clock, we_23, ctrl_reset, data_writeReg, reg23_read);
 	register reg24(clock, we_24, ctrl_reset, data_writeReg, reg24_read);
-	register reg25(clock, we_25, ctrl_reset, data_writeReg, reg25_read);
+	register reg25reg(clock, we_25, ctrl_reset, data_writeReg, reg25_read);
 	register reg26(clock, we_26, ctrl_reset, data_writeReg, reg26_read);
 	register reg27(clock, we_27, ctrl_reset, data_writeReg, reg27_read);
 	register reg28(clock, we_28, ctrl_reset, data_writeReg, reg28_read);
@@ -167,5 +167,7 @@ module regfile (clock, ctrl_writeEnable, ctrl_reset, ctrl_writeReg, ctrl_readReg
 	tristate tri_B_29(reg29_read, readB_29, data_readRegB);
 	tristate tri_B_30(reg30_read, readB_30, data_readRegB);
 	tristate tri_B_31(reg31_read, readB_31, data_readRegB);
+
+	assign reg25 = reg25_read;
 
 endmodule

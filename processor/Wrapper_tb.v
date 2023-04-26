@@ -33,10 +33,10 @@
  *
  **/
 
-module Wrapper_tb #(parameter FILE = "presets_3");
+module Wrapper_tb #(parameter FILE = "servotest");
 
 	// FileData
-	localparam DIR = "Test Files/";
+	localparam DIR = "processor/Test Files/";
 	localparam MEM_DIR = "Memory Files/";
 	localparam OUT_DIR = "Output Files/";
 	localparam VERIF_DIR = "Verification Files/";
@@ -94,15 +94,18 @@ module Wrapper_tb #(parameter FILE = "presets_3");
 
 	//clock_divider clock_divider (.CLK100MHZ(clockIn), .CLK_OUT(clock), .N(32'd5));
 
-	wire[31:0] step_x_dir, step_y_dir, step_x_speed, step_y_speed;
+	wire[31:0] step_x_dir, step_y_dir, step_x_speed, step_y_speed, reg25;
 
 	move_one_step move_one_step_x_prog(.clock_in(clock), .speed(step_x_speed), .out(prog_x));
 	move_one_step move_one_step_y_prog(.clock_in(clock), .speed(step_y_speed), .out(prog_y));
 	
 	reg[2:0] pre;
+	reg manual;
+	
 	initial pre[2] = 1'b0;
 	initial pre[1] = 1'b0;
 	initial pre[0] = 1'b0;
+	initial manual = 1'b0;
 	always begin
 		#300 pre[2] = ~pre[2];
 		#500 pre[1] = 1'b0;
@@ -135,7 +138,7 @@ module Wrapper_tb #(parameter FILE = "presets_3");
 		.ctrl_writeReg(rd),
 		.ctrl_readRegA(rs1_in), .ctrl_readRegB(rs2), 
 		.step_x_dir(step_x_dir), .step_y_dir(step_y_dir), .step_x_speed(step_x_speed), .step_y_speed(step_y_speed),
-		.data_writeReg(rData), .data_readRegA(regA), .data_readRegB(regB));
+		.data_writeReg(rData), .data_readRegA(regA), .data_readRegB(regB), .reg25(reg25));
 						
 	// Processor Memory (RAM)
 	RAM ProcMem(.clk(clock), 
@@ -176,8 +179,8 @@ module Wrapper_tb #(parameter FILE = "presets_3");
 		end
 
 		// Output file name
-		$dumpfile({DIR, OUT_DIR, "presets_2", ".vcd"});
-		//$dumpfile({DIR, OUT_DIR, FILE, ".vcd"});
+		//$dumpfile({DIR, OUT_DIR, "presets_2", ".vcd"});
+		$dumpfile({DIR, OUT_DIR, FILE, ".vcd"});
 		// Module to capture and what level, 0 means all wires
 		$dumpvars(0, Wrapper_tb);
 
