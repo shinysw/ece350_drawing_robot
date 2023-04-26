@@ -20,20 +20,22 @@ square:
     addi $r22, $0, 21213
     stall 47140452
     addi $r19, $0, 1
-    addi $r20, $0, 1
+    addi $r20, $0, 0
     addi $r21, $0, 21213
+    addi $r22, $0, 21214
+    stall 47140452
+    addi $r19, $0, 0
+    addi $r20, $0, 0
+    addi $r21, $0, 21214
     addi $r22, $0, 21214
     stall 47140452
     addi $r19, $0, 0
     addi $r20, $0, 1
     addi $r21, $0, 21214
-    addi $r22, $0, 21214
-    stall 47140452
-    addi $r19, $0, 1
-    addi $r20, $0, 0
-    addi $r21, $0, 21214
     addi $r22, $0, 21213
     stall 47140452
+    addi $r21, $0, 0
+    addi $r22, $0, 0
 
     # Reset the input
     addi $r8, $0, 0
@@ -45,23 +47,30 @@ triangle:
     nop
     nop
     nop
-    # first diagonal
     addi $r19, $0, 1
     addi $r20, $0, 1
-    addi $r21, $0, 1
-    addi $r22, $0, 1
+    addi $r21, $0, 0
+    addi $r22, $0, 0
+    stall 0
+    addi $r19, $0, 1
+    addi $r20, $0, 1
+    addi $r21, $0, 21213
+    addi $r22, $0, 21213
+    stall 47140452
+    addi $r19, $0, 1
+    addi $r20, $0, 0
+    addi $r21, $0, 21213
+    addi $r22, $0, 21214
+    stall 47140452
+    addi $r19, $0, 0
+    addi $r20, $0, 1
+    addi $r21, $0, 30000
+    addi $r22, $0, 0
+    stall 66666666
+    addi $r21, $0, 0
+    addi $r22, $0, 0
 
-    stall 33554432
-    # Turn off first diagonal
-    addi $r19, $0, -1
-    addi $r21, $0, -1
-    addi $r20, $0, -1
-    addi $r22, $0, -1
-
-    #second diagonal
-
-
-    addi $r9, $0, -1
+    addi $r9, $0, 0
     j main2
 
 star: 
@@ -72,7 +81,6 @@ star:
     nop
     addi $r10, $0, -1
     j main2
-
 
 main2:
     nop
